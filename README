@@ -1,0 +1,5 @@
+cat > README.md << 'EOF'
+# Formaflix (Monorepo)
+- Backend : Django + DRF + Stripe (dossier courant)
+- Frontend : React + TypeScript + Vite (./eduflix-web)
+EOF

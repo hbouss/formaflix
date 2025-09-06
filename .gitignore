@@ -1,0 +1,25 @@
+cat > .gitignore << 'EOF'
+# Global
+.DS_Store
+.vscode/
+.idea/
+
+# Python / Django (backend)
+__pycache__/
+*.py[cod]
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+.venv/
+venv/
+.env
+*.env
+
+# Node / Vite (frontend)
+eduflix-web/node_modules/
+eduflix-web/dist/
+eduflix-web/*.log
+eduflix-web/.env
+eduflix-web/.env.local
+EOF
