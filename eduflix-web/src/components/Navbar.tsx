@@ -21,6 +21,7 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-6">
           <NavLink to="/" label="Accueil" />
           <NavLink to="/library" label="Ma bibliothèque" />
+          <NavLink to="/my-list" label="Ma liste" />   {/* 👈 ajoute cette ligne */}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           {user ? (

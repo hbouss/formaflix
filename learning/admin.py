@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Lesson, Document, Enrollment, Progress
+from .models import Lesson, Document, Enrollment, Progress, Favorite
+
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
@@ -19,3 +20,8 @@ class EnrollmentAdmin(admin.ModelAdmin):
 @admin.register(Progress)
 class ProgressAdmin(admin.ModelAdmin):
     list_display = ("enrollment", "lesson", "position_seconds", "completed", "updated_at")
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ("user","course","created_at")
+    search_fields = ("user__username","course__title")

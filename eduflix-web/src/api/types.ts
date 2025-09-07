@@ -33,3 +33,16 @@ export type LibraryItem = {
   purchased_at: string;
   course: CourseLite;
 };
+
+export type ContinueItem = {
+  course: CourseLite;
+  percent: number;
+  resume_lesson_id: number | null;
+  resume_position_seconds: number;
+};
+
+export type FavoriteItem = {
+  id: number;
+  course: CourseLite;
+  created_at: string;
+};

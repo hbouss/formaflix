@@ -51,3 +51,15 @@ class Progress(models.Model):
     position_seconds = models.PositiveIntegerField(default=0)
     completed = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="favorites")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="fav_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "course")
+
+    def __str__(self):
+        return f"{self.user} ♥ {self.course.title}"

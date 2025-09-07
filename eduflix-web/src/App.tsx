@@ -5,6 +5,8 @@ import Player from "./pages/Player";
 import Library from "./pages/Library";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import QuizPage from "./pages/Quiz";
+import MyList from "./pages/MyList.tsx";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
         <Route path="/library" element={<Library/>}/>
         <Route path="/signin" element={<SignIn/>}/>
         <Route path="/signup" element={<SignUp/>}/>
+        <Route path="/my-list" element={<MyList/>}/>
+        <Route path="/quiz/:id" element={<QuizPage/>}/>
       </Routes>
     </BrowserRouter>
   );
