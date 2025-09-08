@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from certificates.models import Certificate
 from .models import Lesson, Document, Enrollment, Progress, Favorite
 
 
@@ -25,3 +27,8 @@ class ProgressAdmin(admin.ModelAdmin):
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ("user","course","created_at")
     search_fields = ("user__username","course__title")
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ("user","course","filename","created_at")
+    search_fields = ("user__username","course__title","filename")

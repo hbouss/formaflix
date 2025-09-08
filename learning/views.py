@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from catalog.models import Course
-from .models import Enrollment, Favorite, Lesson, Progress
+from .models import Enrollment, Favorite, Lesson, Progress, Document, DocumentDownload
 from .serializers import MyLibraryItemSerializer, FavoriteSerializer, ProgressUpsertSerializer, \
     ContinueWatchingItemSerializer
 from .utils import last_progress, compute_enrollment_percent
@@ -57,6 +57,11 @@ class ProgressUpsertView(APIView):
 
         lesson = get_object_or_404(Lesson, pk=lesson_id, course_id=course_id)
 
+        pos = max(0, ser.validated_data["position_seconds"])
+        duration = ser.validated_data.get("duration_seconds")
+        if duration is None or duration < 1:
+            duration = max(pos, 1)  # fallback propre
+
         if duration is not None and (lesson.duration_seconds or 0) < duration:
             lesson.duration_seconds = duration
             lesson.save(update_fields=["duration_seconds"])
@@ -77,16 +82,33 @@ class ContinueWatchingView(APIView):
                    .select_related("course"))
         items = []
         for e in enrolls:
-            p_last = last_progress(e)
-            percent = compute_enrollment_percent(e)
-            if percent <= 0 or percent >= 100:
+            p_last = last_progress(e)               # dernier Progress (ta util)
+            percent = compute_enrollment_percent(e) # % global (ta util)
+
+            # ⛔️ pas de reprise si aucune progression
+            if not p_last or (p_last.position_seconds or 0) <= 0:
                 continue
+            # ⛔️ pas de reprise si cours terminé
+            if percent is not None and percent >= 100:
+                continue
+
             items.append({
                 "course": e.course,
-                "percent": percent,
-                "resume_lesson_id": getattr(p_last.lesson, "id", None) if p_last else None,
-                "resume_position_seconds": getattr(p_last, "position_seconds", 0) if p_last else 0,
+                "percent": int(percent or 0),  # autorise 0–99
+                "resume_lesson_id": getattr(p_last.lesson, "id", None),
+                "resume_position_seconds": int(p_last.position_seconds or 0),
             })
-        # sérialise
+
         data = ContinueWatchingItemSerializer(items, many=True, context={"request": request}).data
         return Response(data)
+
+
+class TrackDocumentDownloadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, doc_id: int):
+        doc = get_object_or_404(Document, pk=doc_id)
+        enrollment = Enrollment.objects.filter(user=request.user, course=doc.course).first()
+        if not enrollment:
+            return Response({"detail": "not enrolled"}, status=403)
+        DocumentDownload.objects.create(enrollment=enrollment, document=doc)
+        return Response({"ok": True})

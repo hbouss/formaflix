@@ -24,3 +24,4 @@ class Submission(models.Model):
     score_percent = models.PositiveIntegerField(default=0)
     passed = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(auto_now_add=True)
+    progress_percent = models.PositiveIntegerField(default=0)

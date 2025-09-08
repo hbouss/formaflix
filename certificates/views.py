@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from catalog.models import Course
+from certificates.models import Certificate
 from quizzes.models import Quiz, Submission
 from learning.models import Enrollment
 
@@ -25,6 +26,13 @@ class GenerateCertificateView(APIView):
         sub = Submission.objects.filter(user=request.user, quiz=quiz, passed=True).order_by("-submitted_at").first()
         if not sub:
             return HttpResponseBadRequest("no passing submission")
+            # S'il existe déjà un certificat, renvoie-le
+        existing = Certificate.objects.filter(user=request.user, course_id=course_id).order_by(
+                "-created_at").first()
+        if existing:
+                url = request.build_absolute_uri(f"{settings.MEDIA_URL}certificates/{existing.filename}")
+                return Response({"url": url})
+
 
         # génère un PDF simple
         code = uuid.uuid4().hex[:10].upper()
@@ -51,5 +59,16 @@ class GenerateCertificateView(APIView):
         with open(full, "wb") as f:
             f.write(buff.getvalue())
 
+
+        Certificate.objects.create(user=request.user, course_id=course_id, filename=filename)
         url = request.build_absolute_uri(f"{settings.MEDIA_URL}certificates/{filename}")
+        return Response({"url": url})
+
+class GetMyCertificateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, course_id: int):
+        cert = Certificate.objects.filter(user=request.user, course_id=course_id).order_by("-created_at").first()
+        if not cert:
+            return Response({"detail": "no certificate"}, status=404)
+        url = request.build_absolute_uri(f"{settings.MEDIA_URL}certificates/{cert.filename}")
         return Response({"url": url})

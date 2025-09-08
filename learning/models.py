@@ -2,7 +2,6 @@ from django.conf import settings
 from django.db import models
 from catalog.models import Course
 
-
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=200)
@@ -63,3 +62,11 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user} ♥ {self.course.title}"
+
+class DocumentDownload(models.Model):
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name="document_downloads")
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="downloads")
+    downloaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.enrollment.user} -> {self.document.title} @ {self.downloaded_at}"
