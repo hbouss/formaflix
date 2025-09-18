@@ -28,5 +28,24 @@ class Course(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # — Rails éditoriales pour la Home —
+    is_editor_pick = models.BooleanField(
+        default=False, help_text="Prochain coup de cœur (rail éditorial)."
+    )
+    editor_pick_weight = models.PositiveSmallIntegerField(
+        default=0, help_text="Priorité d’affichage (0 = auto)."
+    )
+
+    is_full_pack = models.BooleanField(
+        default=False, help_text="Afficher dans la rangée 'Packs complets'."
+    )
+    pack_weight = models.PositiveSmallIntegerField(
+        default=0, help_text="Priorité d’affichage (0 = auto)."
+    )
+
+    top10_rank = models.PositiveSmallIntegerField(
+        null=True, blank=True, help_text="1..10 pour forcer l’ordre du 'Top 10'."
+    )
+
     def __str__(self):
         return self.title

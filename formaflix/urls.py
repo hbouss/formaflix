@@ -6,7 +6,7 @@ from accounts.views import RegisterView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 # Importe tes vues API
-from catalog.views import CourseViewSet
+from catalog.views import CourseViewSet, home_rails
 from certificates.views import GenerateCertificateView, GetMyCertificateView
 from learning.views import MyLibraryView, MyListView, ProgressUpsertView, ContinueWatchingView, TrackDocumentDownloadView
 from payments.views import create_checkout_session, checkout_session_status
@@ -44,4 +44,5 @@ urlpatterns = [
     path("api/learning/documents/<int:doc_id>/track/", TrackDocumentDownloadView.as_view()),
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
+    path("api/catalog/home-rails/", home_rails),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

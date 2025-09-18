@@ -46,3 +46,10 @@ export type FavoriteItem = {
   course: CourseLite;
   created_at: string;
 };
+
+export type HomeRails = {
+  editor_picks: CourseLite[];
+  top10: CourseLite[];
+  packs: CourseLite[];
+  bestsellers: CourseLite[];
+};

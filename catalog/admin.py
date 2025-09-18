@@ -14,13 +14,20 @@ class DocumentInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "price_cents", "currency", "is_active", "created_at")
-    list_filter = ("is_active", "categories", "currency")
+    list_display = ("title", "price_cents", "currency", "is_active", "top10_rank", "is_editor_pick", "is_full_pack", "created_at")
+    list_filter = ("is_active", "categories", "currency", "is_editor_pick", "is_full_pack")
+    list_editable = ("top10_rank", "is_editor_pick", "is_full_pack")
     search_fields = ("title", "slug", "synopsis")
     prepopulated_fields = {"slug": ("title",)}
-    # 👉 s'assurer que le champ apparait dans le formulaire
-    fields = ("title","slug","synopsis","description","thumbnail","hero_banner","trailer_file","trailer_url",
-              "price_cents","currency","categories","is_active")
+    fields = (
+        "title","slug","synopsis","description",
+        "thumbnail","hero_banner","trailer_file","trailer_url",
+        "price_cents","currency","categories","is_active",
+        # ↓ nouveaux champs Home
+        "is_editor_pick","editor_pick_weight",
+        "is_full_pack","pack_weight",
+        "top10_rank",
+    )
     inlines = [LessonInline, DocumentInline]
 
 @admin.register(Category)

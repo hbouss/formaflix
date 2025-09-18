@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
-import type { CourseLite, ContinueItem } from "../api/types";
+import type {CourseLite, ContinueItem, HomeRails} from "../api/types";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import RowCarousel from "../components/RowCarousel";
@@ -9,11 +9,17 @@ import { useAuth } from "../store/auth";
 export default function Home() {
   const [courses, setCourses] = useState<CourseLite[]>([]);
   const [continueItems, setContinueItems] = useState<ContinueItem[]>([]);
+  const [rails, setRails] = useState<Partial<HomeRails>>({});
   const { token } = useAuth();
 
   // Charger le catalogue
   useEffect(() => {
     client.get("/catalog/courses/").then((res) => setCourses(res.data));
+  }, []);
+
+  // Nouvelles rails éditoriales
+  useEffect(() => {
+    client.get<HomeRails>("/catalog/home-rails/").then(({ data }) => setRails(data));
   }, []);
 
   // Charger "Continuer à regarder" quand connecté
@@ -54,6 +60,23 @@ export default function Home() {
             owned
           />
         )}
+
+        {rails.editor_picks?.length ? (
+          <RowCarousel title="Trouvez votre prochain coup de cœur" items={rails.editor_picks} />
+        ) : null}
+
+        {rails.top10?.length ? (
+          <RowCarousel title="Top 10 des formations aujourd'hui" items={rails.top10} ranked />
+        ) : null}
+
+        {rails.packs?.length ? (
+          <RowCarousel title="Packs complets" items={rails.packs} />
+        ) : null}
+
+        {rails.bestsellers?.length ? (
+          <RowCarousel title="Les plus vendues" items={rails.bestsellers} />
+        ) : null}
+
         <RowCarousel title="Tendances" items={courses} />
         <RowCarousel title="Nouveautés" items={[...courses].reverse()} />
       </div>
