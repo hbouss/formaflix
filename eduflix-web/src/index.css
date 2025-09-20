@@ -3,5 +3,9 @@
 @tailwind utilities;
 
 
-html, body, #root { height: 100%; }
-body { background: #141414; color: #fff; }
+/* src/index.css */
+html, body, #root {
+  background-color: #000;
+  color-scheme: dark;
+  min-height: 100%;
+}
