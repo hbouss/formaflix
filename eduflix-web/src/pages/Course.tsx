@@ -5,24 +5,23 @@ import client from "../api/client";
 import type { CourseDetail } from "../api/types";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../store/auth";
+import { useTranslation } from "react-i18next";
 
 export default function Course() {
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const nav = useNavigate();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const { token } = useAuth();
 
-  // --- Ma liste (favoris)
   const [inList, setInList] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Charger le cours
   useEffect(() => {
     if (!id) return;
     client.get(`/catalog/courses/${id}/`).then((res) => setCourse(res.data));
   }, [id]);
 
-  // Vérifier si le cours est déjà dans "Ma liste" (seulement si connecté)
   useEffect(() => {
     if (!id || !token) return;
     client
@@ -34,10 +33,9 @@ export default function Course() {
       .catch(() => {});
   }, [id, token]);
 
-  // Achat (Stripe)
   const buy = async () => {
     if (!token) {
-      alert("Connecte-toi pour acheter");
+      alert(t("alerts.loginToBuy"));
       return;
     }
     const { data } = await client.post("/payments/create-checkout-session/", {
@@ -46,18 +44,15 @@ export default function Course() {
     window.location.href = data.checkout_url;
   };
 
-  // Ajouter/retirer de "Ma liste"
   const toggleList = async () => {
     if (!token) {
-      alert("Connecte-toi pour utiliser Ma liste");
+      alert(t("alerts.loginToUseList"));
       return;
     }
     setBusy(true);
     try {
       if (inList) {
-        await client.delete("/learning/my-list/", {
-          data: { course_id: Number(id) },
-        });
+        await client.delete("/learning/my-list/", { data: { course_id: Number(id) } });
         setInList(false);
       } else {
         await client.post("/learning/my-list/", { course_id: Number(id) });
@@ -70,99 +65,79 @@ export default function Course() {
 
   if (!course) return null;
 
+  const price = new Intl.NumberFormat(i18n.language, {
+    style: "currency",
+    currency: (course.currency || "EUR").toUpperCase(),
+  }).format(course.price_cents / 100);
+
   return (
     <div className="bg-black min-h-screen text-white">
       <Navbar />
 
-      {/* ===== Hero Netflix-like (vidéo/image + gradient + actions) ===== */}
+      {/* Hero */}
       <div className="relative w-full aspect-video bg-black">
         {course.trailer_src ? (
-          <video
-            src={course.trailer_src}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <video src={course.trailer_src} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          <img
-            src={course.hero_banner || course.thumbnail}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <img src={course.hero_banner || course.thumbnail} className="absolute inset-0 w-full h-full object-cover" />
         )}
 
-        {/* dégradés façon Netflix */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
 
-        {/* bouton fermer/retour */}
         <button
           onClick={() => nav(-1)}
-          aria-label="Fermer"
+          aria-label={t("buttons.close")}
           className="absolute right-4 top-4 h-10 w-10 rounded-full bg-black/60 hover:bg-black/80 grid place-items-center"
         >
           ✕
         </button>
 
-        {/* Titre + synopsis + actions */}
         <div className="absolute bottom-6 left-6 right-6 max-w-5xl">
-          <h1 className="text-3xl md:text-5xl font-extrabold drop-shadow">
-            {course.title}
-          </h1>
+          <h1 className="text-3xl md:text-5xl font-extrabold drop-shadow">{course.title}</h1>
 
           {course.synopsis && (
-            <p className="mt-2 max-w-3xl text-sm md:text-base opacity-90">
-              {course.synopsis}
-            </p>
+            <p className="mt-2 max-w-3xl text-sm md:text-base opacity-90">{course.synopsis}</p>
           )}
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              onClick={buy}
-              className="px-5 py-2 rounded bg-white text-black hover:bg-neutral-200 font-semibold"
-            >
-              Acheter maintenant — {(course.price_cents / 100).toFixed(2)} €
+            <button onClick={buy} className="px-5 py-2 rounded bg-white text-black hover:bg-neutral-200 font-semibold">
+              {t("course.buyNow")} — {price}
             </button>
             <button
               onClick={toggleList}
               disabled={busy}
               className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50"
             >
-              {inList ? "Retirer de Ma liste" : "Ajouter à Ma liste"}
+              {inList ? t("course.removeFromList") : t("course.addToList")}
             </button>
           </div>
 
-          {/* mini méta (catégories) */}
           {course.categories?.length > 0 && (
             <div className="mt-3 text-sm opacity-80">
-              Genres : {course.categories.join(", ")}
+              {t("course.genres")}: {course.categories.join(", ")}
             </div>
           )}
         </div>
       </div>
 
-      {/* ===== Bloc détails façon fiche Netflix ===== */}
+      {/* Détails */}
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="mt-6 grid md:grid-cols-[2fr,1fr] gap-6">
-          {/* Colonne gauche : À propos + Épisodes */}
           <div className="rounded-2xl bg-[#141414] p-5 ring-1 ring-white/10">
-            <h3 className="text-lg font-semibold">À propos</h3>
+            <h3 className="text-lg font-semibold">{t("course.about")}</h3>
             <p className="opacity-90 mt-2">{course.description}</p>
 
-            <h3 className="mt-6 text-lg font-semibold">Épisodes</h3>
+            <h3 className="mt-6 text-lg font-semibold">{t("course.episodes")}</h3>
             <ul className="mt-2 space-y-1 text-sm opacity-90">
               {course.lessons.map((l) => (
-                <li
-                  key={l.id}
-                  className="flex items-center justify-between rounded-md px-3 py-2 bg-white/5"
-                >
+                <li key={l.id} className="flex items-center justify-between rounded-md px-3 py-2 bg-white/5">
                   <div className="truncate">
                     <span className="opacity-70 mr-2">{l.order}.</span>
                     {l.title}
                     {l.is_free_preview && (
                       <span className="ml-2 text-[11px] px-2 py-0.5 rounded bg-white/10">
-                        Preview
+                        {t("course.preview")}
                       </span>
                     )}
                   </div>
@@ -176,27 +151,19 @@ export default function Course() {
             </ul>
           </div>
 
-          {/* Colonne droite : Aperçu vidéo + Documents */}
           <div className="rounded-2xl bg-[#141414] p-5 ring-1 ring-white/10 h-max">
-            <div className="text-sm opacity-80 mb-2">Aperçu</div>
+            <div className="text-sm opacity-80 mb-2">{t("course.preview")}</div>
             <div className="rounded-xl overflow-hidden">
-              <video
-                src={course.trailer_src}
-                muted
-                controls
-                className="w-full"
-              />
+              <video src={course.trailer_src} muted controls className="w-full" />
             </div>
 
             <div className="mt-6">
-              <div className="text-lg font-semibold">Documents inclus</div>
+              <div className="text-lg font-semibold">{t("course.documentsIncluded")}</div>
               <ul className="text-sm opacity-90 mt-2 space-y-1">
                 {course.documents.map((d) => (
                   <li key={d.id}>• {d.title}</li>
                 ))}
               </ul>
-
-              {/* ❌ pas de Quiz/Certificat ici — ils restent dans le Player */}
             </div>
           </div>
         </div>

@@ -1,0 +1,63 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "Inicio",
+    "library": "Mi biblioteca",
+    "myList": "Mi lista",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "signOut": "Cerrar sesión",
+    "helloUser": "Hola, {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "Ver / Comprar {{price}}",
+    "moreInfo": "Más información"
+  },
+
+  "home": {
+    "continueWatching": "Continuar viendo",
+    "editorPicks": "Encuentra tu próximo favorito",
+    "top10Today": "Top 10 de cursos de hoy",
+    "packs": "Paquetes completos",
+    "bestsellers": "Más vendidos",
+    "trending": "Tendencias",
+    "new": "Novedades"
+  },
+
+  "card": {
+    "accessIncluded": "Acceso incluido",
+    "preview": "Aperçu",
+    "info": "Información",
+    "play": "Reproducir"
+  },
+
+  "player": {
+    "documents": "Documentos",
+    "quizCert": "Quiz y Certificado",
+    "takeQuiz": "Hacer el quiz",
+    "viewCertificate": "Ver mi certificado",
+    "getCertificate": "Obtener mi certificado",
+    "resumeAt": "Reanudar en {{time}}"
+  },
+
+  "course": {
+    "content": "Contenido",
+    "documentsIncluded": "Documentos incluidos:",
+    "price": "Precio",
+    "buyNow": "Comprar ahora",
+    "addToList": "Añadir a mi lista",
+    "removeFromList": "Quitar de mi lista",
+    "preview": "Vista previa"
+  },
+
+  "alerts": {
+    "loginToBuy": "Inicia sesión para comprar",
+    "loginToUseList": "Inicia sesión para usar Mi lista"
+  },
+
+  "cert": {
+    "needQuizSuccess": "Debes aprobar el quiz para generar tu certificado."
+  }
+}

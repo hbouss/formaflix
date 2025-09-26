@@ -1,0 +1,63 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "首页",
+    "library": "我的资料库",
+    "myList": "我的清单",
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "退出",
+    "helloUser": "你好，{{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "观看 / 购买 {{price}}",
+    "moreInfo": "更多信息"
+  },
+
+  "home": {
+    "continueWatching": "继续观看",
+    "editorPicks": "为你甄选好课",
+    "top10Today": "今日十大课程",
+    "packs": "套装合集",
+    "bestsellers": "畅销课程",
+    "trending": "正在流行",
+    "new": "新上架"
+  },
+
+  "card": {
+    "accessIncluded": "已包含访问权限",
+    "preview": "预览",
+    "info": "详情",
+    "play": "播放"
+  },
+
+  "player": {
+    "documents": "文档",
+    "quizCert": "测验与证书",
+    "takeQuiz": "参加测验",
+    "viewCertificate": "查看我的证书",
+    "getCertificate": "获取证书",
+    "resumeAt": "从 {{time}} 继续"
+  },
+
+  "course": {
+    "content": "课程内容",
+    "documentsIncluded": "包含的文档：",
+    "price": "价格",
+    "buyNow": "立即购买",
+    "addToList": "加入我的清单",
+    "removeFromList": "从清单移除",
+    "preview": "预览"
+  },
+
+  "alerts": {
+    "loginToBuy": "请先登录以购买",
+    "loginToUseList": "请先登录以使用“我的清单”"
+  },
+
+  "cert": {
+    "needQuizSuccess": "生成证书前需要先通过测验。"
+  }
+}

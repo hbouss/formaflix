@@ -1,0 +1,66 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "Home",
+    "library": "My Library",
+    "myList": "My List",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "signOut": "Sign out",
+    "helloUser": "Hello, {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "Watch / Buy {{price}}",
+    "moreInfo": "More info"
+  },
+
+  "home": {
+    "continueWatching": "Continue watching",
+    "editorPicks": "Find your next favorite",
+    "top10Today": "Top 10 courses today",
+    "packs": "Complete packs",
+    "bestsellers": "Bestsellers",
+    "trending": "Trending",
+    "new": "New releases"
+  },
+
+  "card": {
+    "accessIncluded": "Access included",
+    "preview": "Preview",
+    "info": "Info",
+    "play": "Play"
+  },
+
+  "player": {
+    "documents": "Documents",
+    "quizCert": "Quiz & Certificate",
+    "takeQuiz": "Take the quiz",
+    "viewCertificate": "View my certificate",
+    "getCertificate": "Get my certificate",
+    "resumeAt": "Resume at {{time}}"
+  },
+
+  "course": {
+    "content": "Content",
+    "documentsIncluded": "Included documents:",
+    "price": "Price",
+    "buyNow": "Buy now",
+    "addToList": "Add to My List",
+    "removeFromList": "Remove from My List",
+    "preview": "Preview",
+    "about": "About",
+    "episodes": "Episodes",
+    "genres": "Genres"
+  },
+
+  "alerts": {
+    "loginToBuy": "Please sign in to buy",
+    "loginToUseList": "Please sign in to use My List"
+  },
+
+  "cert": {
+    "needQuizSuccess": "You must pass the quiz to generate your certificate."
+  }
+}

@@ -4,18 +4,18 @@ import { Link, useParams } from "react-router-dom";
 import client from "../api/client";
 import type { CourseDetail, Lesson } from "../api/types";
 import Navbar from "../components/Navbar";
+import { useTranslation } from "react-i18next";
 
 export default function Player() {
-  const { id } = useParams(); // course id
+  const { t } = useTranslation();
+  const { id } = useParams();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [current, setCurrent] = useState<Lesson | null>(null);
 
-  // reprise (depuis /learning/continue-watching/)
   const [resumeLessonId, setResumeLessonId] = useState<number | null>(null);
   const [resumePos, setResumePos] = useState<number>(0);
 
-  // droits & quiz / certificat
   const [enrolled, setEnrolled] = useState(false);
   const [hasQuiz, setHasQuiz] = useState(false);
   const [certUrl, setCertUrl] = useState("");
@@ -23,17 +23,15 @@ export default function Player() {
   const [certMsg, setCertMsg] = useState("");
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const lastSentRef = useRef<number>(0);           // throttle envoi progression
-  const resumeAppliedRef = useRef<boolean>(false); // éviter re-seek multiples
-  const intervalRef = useRef<number | null>(null); // intervalle heartbeat
+  const lastSentRef = useRef<number>(0);
+  const resumeAppliedRef = useRef<boolean>(false);
+  const intervalRef = useRef<number | null>(null);
 
-  // --- Doc download tracking + ouverture
   const handleDocDownload = async (docId: number, url: string) => {
     try { await client.post(`/learning/documents/${docId}/track/`); } catch {}
     window.open(url, "_blank");
   };
 
-  // 1) Charger le cours
   useEffect(() => {
     if (!id) return;
     client.get(`/catalog/courses/${id}/`).then((res) => {
@@ -43,7 +41,6 @@ export default function Player() {
     });
   }, [id]);
 
-  // 2) Vérifier l’inscription (droits)
   useEffect(() => {
     if (!id) return;
     client.get("/learning/my-library/")
@@ -54,7 +51,6 @@ export default function Player() {
       .catch(() => setEnrolled(false));
   }, [id]);
 
-  // 2b) Certificat existant
   useEffect(() => {
     if (!id || !enrolled) { setCertUrl(""); return; }
     client.get(`/certificates/${id}/mine/`)
@@ -62,7 +58,6 @@ export default function Player() {
       .catch(() => setCertUrl(""));
   }, [id, enrolled]);
 
-  // 3) Quiz présent
   useEffect(() => {
     if (!id || !enrolled) { setHasQuiz(false); return; }
     client.get(`/quizzes/${id}/`)
@@ -70,7 +65,6 @@ export default function Player() {
       .catch(() => setHasQuiz(false));
   }, [id, enrolled]);
 
-  // 4) Charger "continue watching"
   useEffect(() => {
     if (!id) return;
     client.get("/learning/continue-watching/")
@@ -79,31 +73,28 @@ export default function Player() {
         if (entry) {
           setResumeLessonId(entry.resume_lesson_id ?? null);
           setResumePos(entry.resume_position_seconds ?? 0);
-          resumeAppliedRef.current = false; // autoriser l’application
+          resumeAppliedRef.current = false;
         }
       })
       .catch(() => {});
   }, [id]);
 
-  // 5) Sélectionner la leçon à reprendre
   useEffect(() => {
     if (!course || !resumeLessonId) return;
     const found = course.lessons.find((l) => l.id === resumeLessonId);
     if (found) setCurrent(found);
   }, [course, resumeLessonId]);
 
-  // === Reprise robuste ===
   const applyResumeIfReady = () => {
     const v = videoRef.current;
     if (!v || !current) return false;
     if (!resumeLessonId || current.id !== resumeLessonId || resumePos <= 0) return false;
 
-    const haveMeta = v.readyState >= 1; // HAVE_METADATA
+    const haveMeta = v.readyState >= 1;
     const dur = Math.floor(v.duration || 0);
     const target = dur > 0 ? Math.min(Math.max(resumePos, 0), dur) : resumePos;
 
     if (haveMeta) {
-      // Pause -> seek -> (re)play pour fiabiliser Safari/Chrome
       try { if (!v.paused) v.pause(); } catch {}
       v.currentTime = target;
       const p = v.play();
@@ -114,12 +105,10 @@ export default function Player() {
     return false;
   };
 
-  // 6) Appliquer le seek (immédiat + écouteurs + relances)
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !current) return;
 
-    // tentative immédiate
     if (!resumeAppliedRef.current) {
       const ok = applyResumeIfReady();
       if (ok) return;
@@ -131,7 +120,6 @@ export default function Player() {
     v.addEventListener("loadedmetadata", onMeta);
     v.addEventListener("canplay", onCanPlay);
 
-    // relances ~2s
     let tries = 0;
     const tick = () => {
       if (resumeAppliedRef.current) return;
@@ -145,10 +133,8 @@ export default function Player() {
       v.removeEventListener("loadedmetadata", onMeta);
       v.removeEventListener("canplay", onCanPlay);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, resumeLessonId, resumePos]);
 
-  // 7) Envoi progression (event + heartbeat + fin + pause/onglet)
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !current || !id) return;
@@ -168,19 +154,17 @@ export default function Player() {
     };
 
     const sendNow = () => {
-    const vv = videoRef.current;
-    if (!vv) return;
-
-    const pos = Math.max(0, Math.floor(vv.currentTime || 0));
-    const rawDur = Number.isFinite(vv.duration) ? Math.floor(vv.duration) : 0;
-    const dur = Math.max(rawDur, pos, 1);   // ✅ jamais 0, même si duration inconnue
-
-    void sendProgress({ position_seconds: pos, duration_seconds: dur });
-  };
+      const vv = videoRef.current;
+      if (!vv) return;
+      const pos = Math.max(0, Math.floor(vv.currentTime || 0));
+      const rawDur = Number.isFinite(vv.duration) ? Math.floor(vv.duration) : 0;
+      const dur = Math.max(rawDur, pos, 1);
+      void sendProgress({ position_seconds: pos, duration_seconds: dur });
+    };
 
     const onTimeUpdate = () => {
       const now = Date.now();
-      if (now - lastSentRef.current < 5000) return; // throttle 5s
+      if (now - lastSentRef.current < 5000) return;
       lastSentRef.current = now;
       sendNow();
     };
@@ -194,10 +178,8 @@ export default function Player() {
     const onVisibility = () => { if (document.hidden) sendNow(); };
     const onBeforeUnload = () => sendNow();
 
-    // ✅ Heartbeat toutes les 5s même si timeupdate ne fire pas
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = window.setInterval(() => {
-      // évite le spam si timeupdate vient d'envoyer
       const now = Date.now();
       if (now - lastSentRef.current >= 4900) {
         lastSentRef.current = now;
@@ -221,7 +203,6 @@ export default function Player() {
     };
   }, [current, id]);
 
-  // Certificat
   const generateCert = async () => {
     setCertMsg("");
     setCertBusy(true);
@@ -230,7 +211,7 @@ export default function Player() {
       setCertUrl(data.url);
       window.open(data.url, "_blank");
     } catch {
-      setCertMsg("Tu dois d’abord réussir le quiz pour générer ton certificat.");
+      setCertMsg(t("cert.needQuizSuccess"));
     } finally {
       setCertBusy(false);
     }
@@ -240,7 +221,6 @@ export default function Player() {
 
   const selectLesson = (l: Lesson) => {
     setCurrent(l);
-    // si c'est la leçon à reprendre, on autorise à nouveau le seek
     if (resumeLessonId && l.id === resumeLessonId) {
       resumeAppliedRef.current = false;
     }
@@ -249,15 +229,15 @@ export default function Player() {
   return (
     <div className="bg-black min-h-screen text-white">
       <Navbar />
-      <div className="grid md:grid-cols-[2fr,1fr] gap-6 max-w-7xl mx-auto px-4 py-6">
+      <div className="grid md:grid-cols-[2fr,1fr] gap-6 max-w-7xl mx-auto px-4 pt-[88px] pb-6">
         <div>
           <video
-            key={current.id}        // force un re-mount, garantit loadedmetadata
+            key={current.id}
             ref={videoRef}
             src={current.video_src}
             controls
             autoPlay
-            muted                  // évite les blocages autoplay
+            muted
             playsInline
             preload="metadata"
             className="w-full rounded-xl"
@@ -279,7 +259,7 @@ export default function Player() {
                 {l.order}. {l.title}
                 {resumeLessonId === l.id && resumePos > 0 && (
                   <span className="ml-2 text-xs opacity-80">
-                    · Reprendre à {formatTime(resumePos)}
+                    · {t("player.resumeAt", { time: formatTime(resumePos) })}
                   </span>
                 )}
               </button>
@@ -287,7 +267,7 @@ export default function Player() {
           </div>
 
           <div className="mt-6">
-            <div className="font-semibold">Documents</div>
+            <div className="font-semibold">{t("player.documents")}</div>
             <ul className="text-sm opacity-90 mt-2 space-y-1">
               {course.documents.map((d) => (
                 <li key={d.id}>
@@ -305,23 +285,15 @@ export default function Player() {
 
           {enrolled && hasQuiz && (
             <div className="mt-6">
-              <div className="font-semibold">Quiz & Certificat</div>
+              <div className="font-semibold">{t("player.quizCert")}</div>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Link
-                  to={`/quiz/${id}`}
-                  className="px-4 py-2 rounded bg-white/10 hover:bg-white/20"
-                >
-                  Passer le quiz
+                <Link to={`/quiz/${id}`} className="px-4 py-2 rounded bg-white/10 hover:bg-white/20">
+                  {t("player.takeQuiz")}
                 </Link>
 
                 {certUrl ? (
-                  <a
-                    href={certUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-2 rounded bg-white/10 hover:bg-white/20"
-                  >
-                    Voir mon certificat
+                  <a href={certUrl} target="_blank" rel="noreferrer" className="px-4 py-2 rounded bg-white/10 hover:bg-white/20">
+                    {t("player.viewCertificate")}
                   </a>
                 ) : (
                   <button
@@ -329,7 +301,7 @@ export default function Player() {
                     disabled={certBusy}
                     className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50"
                   >
-                    Obtenir mon certificat
+                    {t("player.getCertificate")}
                   </button>
                 )}
               </div>

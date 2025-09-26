@@ -1,13 +1,27 @@
+// src/api/types.ts
+
 export type CourseLite = {
   id: number;
   title: string;
   slug: string;
-  synopsis: string;
+
+  // Souvent présent, mais pas toujours → optionnel
+  synopsis?: string;
+
   thumbnail: string;
-  trailer_src: string;
+
+  // Teaser (certaines API n’envoient pas toujours la même clé)
+  trailer_src?: string;
+  trailer_url?: string;
+  trailer_file?: string;
+
   price_cents: number;
-  currency: string;
-  categories: string[];
+  currency?: string;
+
+  categories?: string[];
+
+  // Certaines listes renvoient déjà une bannière
+  hero_banner?: string;
 };
 
 export type Lesson = {
@@ -15,15 +29,25 @@ export type Lesson = {
   title: string;
   order: number;
   duration_seconds: number;
-  is_free_preview: boolean;
-  video_src: string;
+  is_free_preview?: boolean;
+  video_src?: string;
 };
 
-export type Doc = { id: number; title: string; file: string };
+export type Doc = {
+  id: number;
+  title: string;
+  file: string;
+};
 
 export type CourseDetail = CourseLite & {
-  description: string;
-  hero_banner: string;
+  description?: string;
+
+  // Si non présent dans CourseLite côté liste, on le garde ici aussi
+  hero_banner?: string;
+
+  // Date d’ajout (utilisée dans le modal)
+  created_at?: string;
+
   lessons: Lesson[];
   documents: Doc[];
 };

@@ -1,0 +1,63 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "الرئيسية",
+    "library": "مكتبتي",
+    "myList": "قائمتي",
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "signOut": "تسجيل الخروج",
+    "helloUser": "مرحبًا، {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "مشاهدة / شراء {{price}}",
+    "moreInfo": "مزيد من المعلومات"
+  },
+
+  "home": {
+    "continueWatching": "تابع المشاهدة",
+    "editorPicks": "اختيارات المحررين",
+    "top10Today": "أفضل 10 دورات اليوم",
+    "packs": "حِزم كاملة",
+    "bestsellers": "الأكثر مبيعًا",
+    "trending": "الرائج",
+    "new": "الجديد"
+  },
+
+  "card": {
+    "accessIncluded": "الوصول مُتاح",
+    "preview": "معاينة",
+    "info": "معلومات",
+    "play": "تشغيل"
+  },
+
+  "player": {
+    "documents": "المستندات",
+    "quizCert": "الاختبار والشهادة",
+    "takeQuiz": "بدء الاختبار",
+    "viewCertificate": "عرض شهادتي",
+    "getCertificate": "الحصول على الشهادة",
+    "resumeAt": "المتابعة عند {{time}}"
+  },
+
+  "course": {
+    "content": "المحتوى",
+    "documentsIncluded": "المستندات المضمنة:",
+    "price": "السعر",
+    "buyNow": "اشترِ الآن",
+    "addToList": "أضِف إلى قائمتي",
+    "removeFromList": "إزالة من قائمتي",
+    "preview": "معاينة"
+  },
+
+  "alerts": {
+    "loginToBuy": "سجّل الدخول للشراء",
+    "loginToUseList": "سجّل الدخول لاستخدام «قائمتي»"
+  },
+
+  "cert": {
+    "needQuizSuccess": "يجب أن تُنجز الاختبار بنجاح لإنشاء شهادتك."
+  }
+}

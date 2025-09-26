@@ -1,0 +1,63 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "Домой",
+    "library": "Моя библиотека",
+    "myList": "Мой список",
+    "signIn": "Войти",
+    "signUp": "Создать аккаунт",
+    "signOut": "Выйти",
+    "helloUser": "Привет, {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "Смотреть / Купить {{price}}",
+    "moreInfo": "Подробнее"
+  },
+
+  "home": {
+    "continueWatching": "Продолжить просмотр",
+    "editorPicks": "Найдите свой следующий фаворит",
+    "top10Today": "Топ-10 курсов сегодня",
+    "packs": "Полные пакеты",
+    "bestsellers": "Бестселлеры",
+    "trending": "В тренде",
+    "new": "Новинки"
+  },
+
+  "card": {
+    "accessIncluded": "Доступ включен",
+    "preview": "Превью",
+    "info": "Инфо",
+    "play": "Воспроизвести"
+  },
+
+  "player": {
+    "documents": "Документы",
+    "quizCert": "Тест и сертификат",
+    "takeQuiz": "Пройти тест",
+    "viewCertificate": "Посмотреть сертификат",
+    "getCertificate": "Получить сертификат",
+    "resumeAt": "Продолжить с {{time}}"
+  },
+
+  "course": {
+    "content": "Содержание",
+    "documentsIncluded": "Включенные материалы:",
+    "price": "Цена",
+    "buyNow": "Купить сейчас",
+    "addToList": "Добавить в список",
+    "removeFromList": "Удалить из списка",
+    "preview": "Превью"
+  },
+
+  "alerts": {
+    "loginToBuy": "Войдите, чтобы купить",
+    "loginToUseList": "Войдите, чтобы использовать «Мой список»"
+  },
+
+  "cert": {
+    "needQuizSuccess": "Нужно успешно пройти тест, чтобы получить сертификат."
+  }
+}

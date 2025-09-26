@@ -1,0 +1,63 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "Додому",
+    "library": "Моя бібліотека",
+    "myList": "Мій список",
+    "signIn": "Увійти",
+    "signUp": "Створити обліковий запис",
+    "signOut": "Вийти",
+    "helloUser": "Привіт, {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "Дивитися / Купити {{price}}",
+    "moreInfo": "Докладніше"
+  },
+
+  "home": {
+    "continueWatching": "Продовжити перегляд",
+    "editorPicks": "Знайдіть свій наступний фаворит",
+    "top10Today": "Топ-10 курсів сьогодні",
+    "packs": "Повні пакети",
+    "bestsellers": "Хіти продажів",
+    "trending": "У тренді",
+    "new": "Новинки"
+  },
+
+  "card": {
+    "accessIncluded": "Доступ включено",
+    "preview": "Перегляд",
+    "info": "Інфо",
+    "play": "Відтворити"
+  },
+
+  "player": {
+    "documents": "Документи",
+    "quizCert": "Тест і сертифікат",
+    "takeQuiz": "Пройти тест",
+    "viewCertificate": "Переглянути сертифікат",
+    "getCertificate": "Отримати сертифікат",
+    "resumeAt": "Продовжити з {{time}}"
+  },
+
+  "course": {
+    "content": "Зміст",
+    "documentsIncluded": "Включені документи:",
+    "price": "Ціна",
+    "buyNow": "Придбати зараз",
+    "addToList": "Додати до мого списку",
+    "removeFromList": "Видалити зі списку",
+    "preview": "Перегляд"
+  },
+
+  "alerts": {
+    "loginToBuy": "Увійдіть, щоб купити",
+    "loginToUseList": "Увійдіть, щоб користуватися «Моїм списком»"
+  },
+
+  "cert": {
+    "needQuizSuccess": "Потрібно успішно скласти тест, щоб згенерувати сертифікат."
+  }
+}

@@ -9,3 +9,5 @@ html, body, #root {
   color-scheme: dark;
   min-height: 100%;
 }
+
+html[dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }

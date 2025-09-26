@@ -1,0 +1,68 @@
+{
+  "brand": "Eduflix",
+
+  "nav": {
+    "home": "Accueil",
+    "library": "Ma bibliothèque",
+    "myList": "Ma liste",
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "signOut": "Se déconnecter",
+    "helloUser": "Bonjour, {{username}}"
+  },
+
+  "hero": {
+    "watchBuy": "Lecture / Acheter {{price}}",
+    "moreInfo": "Plus d'infos",
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
+
+  "home": {
+    "continueWatching": "Continuer à regarder",
+    "editorPicks": "Trouvez votre prochain coup de cœur",
+    "top10Today": "Top 10 des formations aujourd'hui",
+    "packs": "Packs complets",
+    "bestsellers": "Les plus vendues",
+    "trending": "Tendances",
+    "new": "Nouveautés"
+  },
+
+  "card": {
+    "accessIncluded": "Accès inclus",
+    "preview": "Aperçu",
+    "info": "Infos",
+    "play": "Lecture"
+  },
+
+  "player": {
+    "documents": "Documents",
+    "quizCert": "Quiz & Certificat",
+    "takeQuiz": "Passer le quiz",
+    "viewCertificate": "Voir mon certificat",
+    "getCertificate": "Obtenir mon certificat",
+    "resumeAt": "Reprendre à {{time}}"
+  },
+
+  "course": {
+    "content": "Contenu",
+    "documentsIncluded": "Documents inclus :",
+    "price": "Prix",
+    "buyNow": "Acheter maintenant",
+    "addToList": "Ajouter à ma liste",
+    "removeFromList": "Retirer de ma liste",
+    "preview": "Aperçu",
+    "about": "À propos",
+    "episodes": "Épisodes",
+    "genres": "Genres"
+  },
+
+  "alerts": {
+    "loginToBuy": "Connecte-toi pour acheter",
+    "loginToUseList": "Connecte-toi pour utiliser Ma liste"
+  },
+
+  "cert": {
+    "needQuizSuccess": "Tu dois d’abord réussir le quiz pour générer ton certificat."
+  }
+}
