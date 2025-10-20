@@ -28,8 +28,20 @@ const NavLink = ({ to, labelKey }: { to: string; labelKey: string }) => {
 
 export default function Navbar() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user, token, signOut } = useAuth(); // ⬅️ on récupère aussi token
   const nav = useNavigate();
+
+  // Fallback fiable pour le nom si user est encore null mais token présent
+  const savedUser = (() => {
+    try {
+      const s = localStorage.getItem("eduflix_user");
+      return s ? JSON.parse(s) as { username?: string } : null;
+    } catch {
+      return null;
+    }
+  })();
+  const displayName = user?.username ?? savedUser?.username ?? "";
+  const isAuthed = !!(token || user); // ⬅️ on considère connecté si token présent
 
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -47,7 +59,7 @@ export default function Navbar() {
       style={{ height: 72 }}
     >
       <div className="mx-auto max-w-[1500px] h-full px-6 flex items-center gap-8">
-        {/* Logo traduit si tu veux (ou garde "Eduflix") */}
+        {/* Logo */}
         <Link
           to="/"
           className="select-none"
@@ -70,11 +82,11 @@ export default function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
-          <LanguageMenu />   {/* <<< ici, avant/à côté du bloc user */}
-          {user ? (
+          <LanguageMenu />
+          {isAuthed ? (
             <>
               <span className="hidden sm:block text-sm opacity-80" style={{ fontFamily: NAV_FONT }}>
-                {t("nav.helloUser", { username: user.username })}
+                {t("nav.helloUser", { username: displayName || t("nav.signIn") })}
               </span>
               <button
                 onClick={() => {

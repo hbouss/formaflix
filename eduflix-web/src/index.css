@@ -11,3 +11,18 @@ html, body, #root {
 }
 
 html[dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }
+
+/* === Safe-area iOS + utilitaires mobile === */
+:root{
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
+/* Ajoute une marge top égale à ~56px + encoche iOS */
+.pt-safe { padding-top: calc(56px + var(--sat, 0px)); }
+/* Ajoute une marge bottom pour ne pas coller à la barre iOS */
+.pb-safe { padding-bottom: calc(16px + var(--sab, 0px)); }
+
+/* Carrousels sans scrollbar visible (iOS/Android) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

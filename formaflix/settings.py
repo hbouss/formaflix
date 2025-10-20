@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 import os
 import dj_database_url
@@ -8,7 +9,23 @@ load_dotenv(BASE_DIR / ".env")  # ← charge .env
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 DEBUG = os.getenv("DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+
+# --- ALLOWED_HOSTS robuste ---
+hosts_env = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h.strip() for h in hosts_env.split(",") if h.strip()]
+
+# Valeur par défaut si rien en env
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.15"]
+
+# En DEV, possibilité d’ouvrir à tout pour tests mobiles
+if DEBUG and os.getenv("ALLOW_ALL_HOSTS_DEV", "1") == "1":
+    ALLOWED_HOSTS = ["*"]
+
+# (temporaire) Log pour vérifier ce que Django utilise VRAIMENT
+print("DEBUG =", DEBUG)
+print("ALLOWED_HOSTS =", ALLOWED_HOSTS)
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -85,6 +102,20 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+}
+
+SIMPLE_JWT = {
+    # Un access court = plus sûr. 1h est confortable côté UX.
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    # Session totale possible 24h (tant qu'on refresh régulièrement)
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    # Optionnel : on tourne le refresh à chaque refresh (meilleure sécu)
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    # Ces deux-là par défaut, mais on les fixe explicitement :
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
 }
 
 SPECTACULAR_SETTINGS = {

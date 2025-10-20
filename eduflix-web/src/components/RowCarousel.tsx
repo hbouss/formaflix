@@ -42,11 +42,13 @@ export default function RowCarousel({
   };
 
   return (
-    <section className="relative my-8">
-      {/* Titre aligné à 4vw */}
-      <h3 className="px-[4vw] text-[18px] md:text-xl font-semibold mb-2">{title}</h3>
+    <section className="relative mt-6 sm:mt-8">
+      {/* Titre plus lisible sur mobile */}
+      <h3 className="px-4 sm:px-[4vw] text-[20px] sm:text-xl font-bold mb-3 sm:mb-2">
+        {title}
+      </h3>
 
-      {/* Flèches façon Netflix, posées au bord du viewport */}
+      {/* Flèches (desktop seulement) */}
       <button
         onClick={() => scroll("left")}
         className="hidden md:flex items-center justify-center absolute left-[0.8vw] top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-black/60 hover:bg-black/80"
@@ -62,10 +64,10 @@ export default function RowCarousel({
         ›
       </button>
 
-      {/* Piste scroll alignée à 4vw */}
+      {/* Piste scrollable, paddings mobiles, scrollbar cachée */}
       <div
         ref={ref}
-        className="flex gap-3 overflow-x-auto px-[4vw] pb-2 scroll-smooth snap-x"
+        className="flex gap-3 overflow-x-auto px-4 sm:px-[4vw] pb-2 scroll-smooth snap-x no-scrollbar"
       >
         {items.map((c, idx) => {
           const isOwned = owned || !!ownedById?.[c.id];

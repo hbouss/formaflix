@@ -30,8 +30,8 @@ urlpatterns = [
     path("api/payments/session-status/", checkout_session_status),
     path("api/payments/webhook/", stripe_webhook),
     path("api/auth/register/", RegisterView.as_view()),
-    path("api/auth/token/", TokenObtainPairView.as_view()),
-    path("api/auth/token/refresh/", TokenRefreshView.as_view()),
+    path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 # Learning
     path("api/learning/my-library/", MyLibraryView.as_view()),
     path("api/learning/my-list/", MyListView.as_view()),
