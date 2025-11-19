@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "Додому",
@@ -8,12 +8,18 @@
     "signIn": "Увійти",
     "signUp": "Створити обліковий запис",
     "signOut": "Вийти",
-    "helloUser": "Привіт, {{username}}"
+    "helloUser": "Привіт, {{username}}",
+    "profile": "Мій профіль",
+    "search": "Пошук"
   },
 
   "hero": {
     "watchBuy": "Дивитися / Купити {{price}}",
-    "moreInfo": "Докладніше"
+    "moreInfo": "Докладніше",
+    "mute": "Вимкнути звук",
+    "unmute": "Увімкнути звук",
+    "watchTrailer": "Дивитися трейлер",
+    "replayTrailer": "Повторити трейлер"
   },
 
   "home": {
@@ -28,8 +34,8 @@
 
   "card": {
     "accessIncluded": "Доступ включено",
-    "preview": "Перегляд",
-    "info": "Інфо",
+    "preview": "Попередній перегляд",
+    "info": "Інформація",
     "play": "Відтворити"
   },
 
@@ -39,7 +45,9 @@
     "takeQuiz": "Пройти тест",
     "viewCertificate": "Переглянути сертифікат",
     "getCertificate": "Отримати сертифікат",
-    "resumeAt": "Продовжити з {{time}}"
+    "resumeAt": "Продовжити з {{time}}",
+    "nextLesson": "Наступний урок",
+    "previousLesson": "Попередній урок"
   },
 
   "course": {
@@ -49,15 +57,90 @@
     "buyNow": "Придбати зараз",
     "addToList": "Додати до мого списку",
     "removeFromList": "Видалити зі списку",
-    "preview": "Перегляд"
+    "preview": "Попередній перегляд",
+    "about": "Про курс",
+    "episodes": "Епізоди",
+    "genres": "Жанри",
+    "similar": "Схожі матеріали",
+    "trailers": "Трейлери",
+    "minutesApprox": "~{{minutes}} хв",
+    "year": "{{year}}",
+    "loveBadge": "Цей матеріал сподобався {{percent}}% користувачів",
+    "reviewsCount": "{{count}} відгуків"
+  },
+
+  "courseInfo": {
+    "buyFor": "Купити — {{price}} €",
+    "play": "Відтворити",
+    "replayTrailer": "Повторити трейлер",
+    "documents": "Документи",
+    "pdfHint": "PDF-буклет і ресурси",
+    "open": "Відкрити",
+    "download": "Завантажити",
+    "tabs": {
+      "episodes": "Епізоди",
+      "similar": "Схожі",
+      "trailers": "Трейлери"
+    },
+    "empty": {
+      "episodes": "Немає доступних епізодів.",
+      "similar": "Поки немає рекомендацій.",
+      "trailers": "Трейлер недоступний."
+    },
+    "topbar": {
+      "close": "Закрити",
+      "mute": "Вимкнути звук",
+      "unmute": "Увімкнути звук"
+    },
+    "quick": {
+      "myList": "Мій список",
+      "inMyList": "У моєму списку",
+      "rate": "Оцінити",
+      "notForMe": "Мені не підходить",
+      "iLikeIt": "Мені подобається",
+      "loveIt": "Обожнюю!",
+      "share": "Поділитися"
+    },
+    "ratePopover": {
+      "title": "Ваша оцінка",
+      "notForMe": "Мені не підходить",
+      "iLikeIt": "Мені подобається",
+      "loveIt": "Обожнюю!"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "Поділитися цим матеріалом",
+    "shareVia": "Поділитися через…",
+    "copyLink": "Скопіювати посилання",
+    "linkCopied": "Посилання скопійовано",
+    "cancel": "Скасувати",
+    "copyPrompt": "Скопіюйте це посилання:",
+    "copiedToast": "Скопійовано в буфер обміну"
   },
 
   "alerts": {
     "loginToBuy": "Увійдіть, щоб купити",
-    "loginToUseList": "Увійдіть, щоб користуватися «Моїм списком»"
+    "loginToUseList": "Увійдіть, щоб користуватися «Моїм списком»",
+    "loginToRate": "Увійдіть, щоб оцінити",
+    "linkCopied": "Посилання скопійовано в буфер обміну",
+    "somethingWentWrong": "Щось пішло не так. Спробуйте пізніше."
   },
 
   "cert": {
     "needQuizSuccess": "Потрібно успішно скласти тест, щоб згенерувати сертифікат."
+  },
+
+  "actions": {
+    "ok": "Гаразд",
+    "cancel": "Скасувати",
+    "close": "Закрити",
+    "save": "Зберегти",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "confirm": "Підтвердити",
+    "back": "Назад",
+    "next": "Далі",
+    "retry": "Повторити спробу"
   }
 }

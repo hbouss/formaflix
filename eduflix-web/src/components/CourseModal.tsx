@@ -4,6 +4,57 @@ import client from "../api/client";
 import type { CourseDetail, CourseLite, HomeRails } from "../api/types";
 import { useAuth } from "../store/auth";
 
+/* ---------- Utils CF Stream + HLS ---------- */
+// Convertit : iframe HTML, URL iframe (videodelivery / cloudflarestream / customer-xxx), déjà HLS/MP4 → src lisible par <video>
+function normalizeTeaserSrc(val?: string): string {
+  const raw = (val || "").trim();
+  if (!raw) return "";
+
+  // Déjà un flux lisible ?
+  if (/\.(m3u8|mp4)(\?|$)/i.test(raw)) return raw;
+
+  // Si on nous a collé tout le <iframe …>, on extrait son src
+  const mIframe = raw.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+  const s = mIframe ? mIframe[1] : raw;
+
+  try {
+    const u = new URL(s);
+    // Cherche un segment qui ressemble à l’ID
+    const seg = u.pathname.replace(/^\/+/, "").split("/").find(x => /^[a-z0-9]+$/i.test(x));
+    if (!seg) return s;
+    return `https://videodelivery.net/${seg}/manifest/video.m3u8`;
+  } catch {
+    // Si ce n'est pas une URL valide, on tente une regex au cas où
+    const m = s.match(/(?:iframe\.)?(?:videodelivery\.net|cloudflarestream\.com)\/([a-z0-9]+)/i);
+    return m ? `https://videodelivery.net/${m[1]}/manifest/video.m3u8` : s;
+  }
+}
+
+const isM3U8 = (s: string) => /\.m3u8($|\?)/i.test(s);
+
+async function attachHlsIfNeeded(video: HTMLVideoElement, src: string) {
+  if (!isM3U8(src)) { video.src = src; return null; }
+  if (video.canPlayType("application/vnd.apple.mpegURL")) { video.src = src; return null; }
+  const { default: Hls } = await import("hls.js");
+  if (Hls.isSupported()) {
+    const hls = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 10, maxMaxBufferLength: 30 });
+    hls.loadSource(src);
+    hls.attachMedia(video);
+    return hls as unknown as { destroy(): void };
+  }
+  video.src = src;
+  return null;
+}
+
+function isTrueEnd(v: HTMLVideoElement) {
+  const d = v.duration;
+  if (isFinite(d) && d > 0) {
+    const tail = Math.max(0.4, d * 0.03);
+    return v.currentTime >= d - tail;
+  }
+  return false;
+}
+
 /** Teaser vidéo : rendu seulement après la 1ʳᵉ frame + contrôle muet/son */
 function TeaserLayer({
   src,
@@ -18,29 +69,70 @@ function TeaserLayer({
 }) {
   const vref = useRef<HTMLVideoElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const hlsRef = useRef<{ destroy(): void } | null>(null);
 
-  // Autoplay (toujours muet au départ pour iOS/Safari)
+  // Autoplay (toujours muet au départ pour iOS/Safari) + HLS attach
   useEffect(() => {
     const v = vref.current;
     if (!v || !src) return;
-    try {
-      v.muted = true;
-      // @ts-ignore - WebKit
-      v.defaultMuted = true;
-      v.playsInline = true;
-    } catch {}
-    const t = setTimeout(() => {
-      const p = v.play();
-      if (p && typeof p.then === "function") p.catch(() => onError?.());
-    }, 80);
-    return () => clearTimeout(t);
-  }, [src, onError]);
+
+    let cancelled = false;
+
+    const start = async () => {
+      // reset & cleanup
+      try {
+        v.pause();
+        v.removeAttribute("src");
+        v.load();
+      } catch {}
+      try {
+        hlsRef.current?.destroy();
+      } catch {}
+      hlsRef.current = null;
+
+      try {
+        v.muted = true;
+        // @ts-ignore - WebKit
+        v.defaultMuted = true;
+        v.playsInline = true;
+        v.poster = poster;
+        v.loop = false; // ✅ laisser finir
+      } catch {}
+
+      try {
+        const hls = await attachHlsIfNeeded(v, src);
+        if (cancelled) {
+          hls?.destroy?.();
+          return;
+        }
+        hlsRef.current = hls;
+        const p = v.play();
+        if (p && typeof p.then === "function") p.catch(() => onError?.());
+      } catch {
+        onError?.();
+      }
+    };
+
+    const t = setTimeout(start, 80);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+      try {
+        v.pause();
+      } catch {}
+      try {
+        hlsRef.current?.destroy();
+      } catch {}
+      hlsRef.current = null;
+    };
+  }, [src, poster, onError]);
 
   // Sync muet ↔ bouton
   useEffect(() => {
     const v = vref.current;
     if (!v) return;
     v.muted = muted;
+    v.loop = false; // ✅ pas de boucle
     if (!muted) {
       const p = v.play();
       if (p && typeof p.then === "function") p.catch(() => {});
@@ -53,18 +145,25 @@ function TeaserLayer({
     <video
       key={src}
       ref={vref}
-      src={src}
-      poster={poster}
       playsInline
-      loop
+      muted
       autoPlay
       preload="auto"
       onPlaying={() => setVisible(true)}
-      onWaiting={() => setVisible(false)}
-      onStalled={() => setVisible(false)}
+      onWaiting={() => { /* no-op */ }}
+      onStalled={() => { /* no-op */ }}
       onError={() => onError?.()}
+      onEnded={() => {
+        const v = vref.current!;
+        if (isTrueEnd(v)) {
+          setVisible(false);
+        } else {
+          const p = v.play();
+          if (p && typeof p.then === "function") p.catch(() => {});
+        }
+      }}
       className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
-      style={{ pointerEvents: "none", visibility: visible ? "visible" : "hidden" }}
+      style={{ pointerEvents: "none" }} // ✅ pas de visibility:hidden
       aria-hidden="true"
     />
   );
@@ -217,7 +316,7 @@ export default function CourseModal({
       }
     };
 
-    run();
+    void run();
   }, [courseId, course, ownedIds]);
 
   // Actions
@@ -270,40 +369,43 @@ export default function CourseModal({
     );
   }, [course]);
 
-  // Cartes « Bandes-annonces et plus » : bande-annonce + leçons en aperçu
-  const extras = useMemo(
-    () =>
-      !course
-        ? []
-        : ([
-            ...(course.trailer_src || course.trailer_url
-              ? [
-                  {
-                    id: "trailer",
-                    title: "Bande-annonce",
-                    src: (course.trailer_src || course.trailer_url) as string,
-                    poster: course.hero_banner || course.thumbnail,
-                    meta: undefined as string | undefined,
-                  },
-                ]
-              : []),
-            ...(course.lessons || [])
-              .filter((l) => l.is_free_preview && !!l.video_src)
-              .map((l) => ({
-                id: `preview_${l.id}`,
-                title: `Aperçu : ${l.title}`,
-                src: l.video_src,
-                poster: course.hero_banner || course.thumbnail,
-                meta: l.duration_seconds ? `${Math.floor(l.duration_seconds / 60)} min` : undefined,
-              })),
-          ] as Array<{ id: string; title: string; src: string; poster: string; meta?: string }>),
-    [course]
-  );
+  // Cartes « Bandes-annonces et plus » : HLS dérivé si besoin
+  const extras = useMemo(() =>
+  !course ? [] : ([
+    ...(course.trailer_src || course.trailer_url || course.trailer_file ? [{
+      id: "trailer",
+      title: "Bande-annonce",
+      src: normalizeTeaserSrc(
+        (course.trailer_src as string) ||
+        (course.trailer_url as string) ||
+        (course.trailer_file as string) ||
+        ""
+      ),
+      poster: course.hero_banner || course.thumbnail,
+      meta: undefined as string | undefined,
+    }] : []),
+    ...(course.lessons || [])
+      .filter(l => l.is_free_preview && !!l.video_src)
+      .map(l => ({
+        id: `preview_${l.id}`,
+        title: `Aperçu : ${l.title}`,
+        src: normalizeTeaserSrc(l.video_src || ""),
+        poster: course.hero_banner || course.thumbnail,
+        meta: l.duration_seconds ? `${Math.floor(l.duration_seconds / 60)} min` : undefined,
+      })),
+  ] as Array<{ id: string; title: string; src: string; poster: string; meta?: string }>),
+[course]);
 
   if (!course) return null;
 
   const bg = course.hero_banner || course.thumbnail;
-  const teaser = course.trailer_src || course.trailer_url || "";
+  const teaser =
+  normalizeTeaserSrc(
+    (course.trailer_src as string) ||
+    (course.trailer_url as string) ||
+    (course.trailer_file as string) ||
+    ""
+  );
   const ownedCurrent = ownedIds.has(courseId);
 
   return (
@@ -448,42 +550,19 @@ export default function CourseModal({
             </div>
           </div>
 
-          {/* Bandes-annonces et plus — EN CARTES */}
+          {/* Bandes-annonces et plus — EN CARTES (HLS géré) */}
           {extras.length ? (
             <div className="px-5 md:px-6 pb-6">
               <h3 className="text-lg font-semibold mb-3">Bandes-annonces et plus</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {extras.map((it) => (
-                  <div key={it.id} className="rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10">
-                    {playingId === it.id ? (
-                      <video
-                        src={it.src}
-                        controls
-                        playsInline
-                        autoPlay
-                        className="w-full aspect-video object-cover"
-                        onEnded={() => setPlayingId(null)}
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setPlayingId(it.id)}
-                        className="relative w-full text-left"
-                        aria-label={`Lire ${it.title}`}
-                      >
-                        <img src={it.poster} alt={it.title} className="w-full aspect-video object-cover" />
-                        <span className="absolute inset-0 grid place-items-center">
-                          <span className="h-12 w-12 rounded-full bg-white/90 text-black grid place-items-center">
-                            ▶
-                          </span>
-                        </span>
-                      </button>
-                    )}
-                    <div className="p-3">
-                      <div className="text-sm font-medium">{it.title}</div>
-                      {it.meta && <div className="text-xs opacity-80 mt-1">{it.meta}</div>}
-                    </div>
-                  </div>
+                  <CardVideo
+                    key={it.id}
+                    item={it}
+                    playing={playingId === it.id}
+                    onPlay={() => setPlayingId(it.id)}
+                    onStop={() => setPlayingId(null)}
+                  />
                 ))}
               </div>
             </div>
@@ -539,6 +618,117 @@ export default function CourseModal({
 
           <div className="h-4" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* Petite carte vidéo avec HLS géré (pour la section “Bandes-annonces et plus”) */
+function CardVideo({
+  item,
+  playing,
+  onPlay,
+  onStop,
+}: {
+  item: { id: string; title: string; src: string; poster: string; meta?: string };
+  playing: boolean;
+  onPlay: () => void;
+  onStop: () => void;
+}) {
+  const vref = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<{ destroy(): void } | null>(null);
+
+  const isM3U8 = (s: string) => /\.m3u8($|\?)/i.test(s);
+
+  async function attachHlsIfNeeded(video: HTMLVideoElement, src: string) {
+    if (!isM3U8(src)) { video.src = src; return null; }
+    if (video.canPlayType("application/vnd.apple.mpegURL")) { video.src = src; return null; }
+    const { default: Hls } = await import("hls.js");
+    if (Hls.isSupported()) {
+      const hls = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 10, maxMaxBufferLength: 30 });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      return hls as unknown as { destroy(): void };
+    }
+    video.src = src;
+    return null;
+  }
+
+  useEffect(() => {
+    const v = vref.current;
+    if (!v) return;
+
+    let cancelled = false;
+
+    const setup = async () => {
+      // cleanup précédent
+      try {
+        v.pause();
+        v.removeAttribute("src");
+        v.load();
+      } catch {}
+      try {
+        hlsRef.current?.destroy();
+      } catch {}
+      hlsRef.current = null;
+
+      if (!playing) return;
+
+      try {
+        const hls = await attachHlsIfNeeded(v, item.src);
+        if (cancelled) {
+          hls?.destroy?.();
+          return;
+        }
+        hlsRef.current = hls;
+        v.playsInline = true;
+        const p = v.play();
+        if (p && typeof p.then === "function") p.catch(() => {});
+      } catch {}
+    };
+
+    void setup();
+
+    return () => {
+      cancelled = true;
+      try {
+        v.pause();
+      } catch {}
+      try {
+        hlsRef.current?.destroy();
+      } catch {}
+      hlsRef.current = null;
+    };
+  }, [playing, item.src]);
+
+  return (
+    <div className="rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10">
+      {playing ? (
+        <video
+          ref={vref}
+          controls
+          playsInline
+          className="w-full aspect-video object-cover"
+          onEnded={onStop}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onPlay}
+          className="relative w-full text-left"
+          aria-label={`Lire ${item.title}`}
+        >
+          <img src={item.poster} alt={item.title} className="w-full aspect-video object-cover" />
+          <span className="absolute inset-0 grid place-items-center">
+            <span className="h-12 w-12 rounded-full bg-white/90 text-black grid place-items-center">
+              ▶
+            </span>
+          </span>
+        </button>
+      )}
+      <div className="p-3">
+        <div className="text-sm font-medium">{item.title}</div>
+        {item.meta && <div className="text-xs opacity-80 mt-1">{item.meta}</div>}
       </div>
     </div>
   );

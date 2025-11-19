@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "首页",
@@ -8,12 +8,18 @@
     "signIn": "登录",
     "signUp": "注册",
     "signOut": "退出",
-    "helloUser": "你好，{{username}}"
+    "helloUser": "你好，{{username}}",
+    "profile": "我的资料",
+    "search": "搜索"
   },
 
   "hero": {
     "watchBuy": "观看 / 购买 {{price}}",
-    "moreInfo": "更多信息"
+    "moreInfo": "更多信息",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "watchTrailer": "观看预告",
+    "replayTrailer": "重播预告"
   },
 
   "home": {
@@ -39,7 +45,9 @@
     "takeQuiz": "参加测验",
     "viewCertificate": "查看我的证书",
     "getCertificate": "获取证书",
-    "resumeAt": "从 {{time}} 继续"
+    "resumeAt": "从 {{time}} 继续",
+    "nextLesson": "下一课时",
+    "previousLesson": "上一课时"
   },
 
   "course": {
@@ -49,15 +57,90 @@
     "buyNow": "立即购买",
     "addToList": "加入我的清单",
     "removeFromList": "从清单移除",
-    "preview": "预览"
+    "preview": "预览",
+    "about": "关于",
+    "episodes": "课时",
+    "genres": "类型",
+    "similar": "相似课程",
+    "trailers": "预告",
+    "minutesApprox": "~{{minutes}} 分钟",
+    "year": "{{year}} 年",
+    "loveBadge": "{{percent}}% 的用户喜欢此课程",
+    "reviewsCount": "{{count}} 条评价"
+  },
+
+  "courseInfo": {
+    "buyFor": "购买 — {{price}} €",
+    "play": "播放",
+    "replayTrailer": "重播预告",
+    "documents": "文档",
+    "pdfHint": "PDF 手册与资源",
+    "open": "打开",
+    "download": "下载",
+    "tabs": {
+      "episodes": "课时",
+      "similar": "相似",
+      "trailers": "预告"
+    },
+    "empty": {
+      "episodes": "暂无课时。",
+      "similar": "暂无推荐。",
+      "trailers": "暂无预告。"
+    },
+    "topbar": {
+      "close": "关闭",
+      "mute": "静音",
+      "unmute": "取消静音"
+    },
+    "quick": {
+      "myList": "我的清单",
+      "inMyList": "已在清单",
+      "rate": "评分",
+      "notForMe": "不合我意",
+      "iLikeIt": "喜欢",
+      "loveIt": "超喜欢！",
+      "share": "分享"
+    },
+    "ratePopover": {
+      "title": "你的评价",
+      "notForMe": "不合我意",
+      "iLikeIt": "喜欢",
+      "loveIt": "超喜欢！"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "分享此课程",
+    "shareVia": "通过…分享",
+    "copyLink": "复制链接",
+    "linkCopied": "链接已复制",
+    "cancel": "取消",
+    "copyPrompt": "复制此链接：",
+    "copiedToast": "已复制到剪贴板"
   },
 
   "alerts": {
     "loginToBuy": "请先登录以购买",
-    "loginToUseList": "请先登录以使用“我的清单”"
+    "loginToUseList": "请先登录以使用“我的清单”",
+    "loginToRate": "请先登录后再评分",
+    "linkCopied": "链接已复制到剪贴板",
+    "somethingWentWrong": "出错了，请稍后再试。"
   },
 
   "cert": {
     "needQuizSuccess": "生成证书前需要先通过测验。"
+  },
+
+  "actions": {
+    "ok": "确定",
+    "cancel": "取消",
+    "close": "关闭",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "retry": "重试"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "Inicio",
@@ -8,12 +8,18 @@
     "signIn": "Iniciar sesión",
     "signUp": "Crear cuenta",
     "signOut": "Cerrar sesión",
-    "helloUser": "Hola, {{username}}"
+    "helloUser": "Hola, {{username}}",
+    "profile": "Mi perfil",
+    "search": "Buscar"
   },
 
   "hero": {
     "watchBuy": "Ver / Comprar {{price}}",
-    "moreInfo": "Más información"
+    "moreInfo": "Más información",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "watchTrailer": "Ver tráiler",
+    "replayTrailer": "Repetir tráiler"
   },
 
   "home": {
@@ -28,18 +34,20 @@
 
   "card": {
     "accessIncluded": "Acceso incluido",
-    "preview": "Aperçu",
+    "preview": "Vista previa",
     "info": "Información",
     "play": "Reproducir"
   },
 
   "player": {
     "documents": "Documentos",
-    "quizCert": "Quiz y Certificado",
-    "takeQuiz": "Hacer el quiz",
+    "quizCert": "Cuestionario y certificado",
+    "takeQuiz": "Hacer el cuestionario",
     "viewCertificate": "Ver mi certificado",
     "getCertificate": "Obtener mi certificado",
-    "resumeAt": "Reanudar en {{time}}"
+    "resumeAt": "Reanudar en {{time}}",
+    "nextLesson": "Lección siguiente",
+    "previousLesson": "Lección anterior"
   },
 
   "course": {
@@ -47,17 +55,92 @@
     "documentsIncluded": "Documentos incluidos:",
     "price": "Precio",
     "buyNow": "Comprar ahora",
-    "addToList": "Añadir a mi lista",
-    "removeFromList": "Quitar de mi lista",
-    "preview": "Vista previa"
+    "addToList": "Añadir a Mi lista",
+    "removeFromList": "Quitar de Mi lista",
+    "preview": "Vista previa",
+    "about": "Acerca de",
+    "episodes": "Episodios",
+    "genres": "Géneros",
+    "similar": "Títulos similares",
+    "trailers": "Tráilers",
+    "minutesApprox": "~{{minutes}} min",
+    "year": "{{year}}",
+    "loveBadge": "Al {{percent}}% les encantó este título",
+    "reviewsCount": "{{count}} reseñas"
+  },
+
+  "courseInfo": {
+    "buyFor": "Comprar — {{price}} €",
+    "play": "Reproducir",
+    "replayTrailer": "Repetir tráiler",
+    "documents": "Documentos",
+    "pdfHint": "Cuaderno PDF y recursos",
+    "open": "Abrir",
+    "download": "Descargar",
+    "tabs": {
+      "episodes": "Episodios",
+      "similar": "Títulos similares",
+      "trailers": "Tráilers"
+    },
+    "empty": {
+      "episodes": "No hay episodios disponibles.",
+      "similar": "No hay recomendaciones por ahora.",
+      "trailers": "No hay tráiler disponible."
+    },
+    "topbar": {
+      "close": "Cerrar",
+      "mute": "Silenciar",
+      "unmute": "Activar sonido"
+    },
+    "quick": {
+      "myList": "Mi lista",
+      "inMyList": "En mi lista",
+      "rate": "Valorar",
+      "notForMe": "No es para mí",
+      "iLikeIt": "Me gusta",
+      "loveIt": "¡Me encanta!",
+      "share": "Compartir"
+    },
+    "ratePopover": {
+      "title": "Tu valoración",
+      "notForMe": "No es para mí",
+      "iLikeIt": "Me gusta",
+      "loveIt": "¡Me encanta!"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "Compartir este título",
+    "shareVia": "Compartir vía…",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "cancel": "Cancelar",
+    "copyPrompt": "Copia este enlace:",
+    "copiedToast": "Copiado al portapapeles"
   },
 
   "alerts": {
     "loginToBuy": "Inicia sesión para comprar",
-    "loginToUseList": "Inicia sesión para usar Mi lista"
+    "loginToUseList": "Inicia sesión para usar Mi lista",
+    "loginToRate": "Inicia sesión para valorar",
+    "linkCopied": "Enlace copiado al portapapeles",
+    "somethingWentWrong": "Ha ocurrido un error. Inténtalo de nuevo más tarde."
   },
 
   "cert": {
-    "needQuizSuccess": "Debes aprobar el quiz para generar tu certificado."
+    "needQuizSuccess": "Debes aprobar el cuestionario para generar tu certificado."
+  },
+
+  "actions": {
+    "ok": "Aceptar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "retry": "Reintentar"
   }
 }

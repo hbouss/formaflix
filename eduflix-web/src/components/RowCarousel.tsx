@@ -12,6 +12,7 @@ export default function RowCarousel({
   ranked = false,
   onInfo,
   ownedById,
+  onBuy,
 }: {
   title: string;
   items: CourseLite[];
@@ -19,6 +20,7 @@ export default function RowCarousel({
   ranked?: boolean;
   onInfo?: (c: CourseLite) => void;
   ownedById?: Record<number, boolean>;
+  onBuy?: (c: CourseLite) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [resumeById, setResumeById] = useState<Record<number, ResumeInfo>>({});
@@ -83,6 +85,7 @@ export default function RowCarousel({
                 owned={isOwned}
                 resume={resumeById[c.id]}
                 onInfo={isOwned ? undefined : onInfo}
+                onBuy={onBuy}
               />
             </div>
           );

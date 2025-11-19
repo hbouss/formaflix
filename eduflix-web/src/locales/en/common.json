@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "Home",
@@ -8,12 +8,18 @@
     "signIn": "Sign in",
     "signUp": "Create account",
     "signOut": "Sign out",
-    "helloUser": "Hello, {{username}}"
+    "helloUser": "Hello, {{username}}",
+    "profile": "My Profile",
+    "search": "Search"
   },
 
   "hero": {
     "watchBuy": "Watch / Buy {{price}}",
-    "moreInfo": "More info"
+    "moreInfo": "More info",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "watchTrailer": "Watch trailer",
+    "replayTrailer": "Replay trailer"
   },
 
   "home": {
@@ -39,7 +45,9 @@
     "takeQuiz": "Take the quiz",
     "viewCertificate": "View my certificate",
     "getCertificate": "Get my certificate",
-    "resumeAt": "Resume at {{time}}"
+    "resumeAt": "Resume at {{time}}",
+    "nextLesson": "Next episode",
+    "previousLesson": "Previous episode"
   },
 
   "course": {
@@ -52,15 +60,86 @@
     "preview": "Preview",
     "about": "About",
     "episodes": "Episodes",
-    "genres": "Genres"
+    "genres": "Genres",
+    "similar": "Similar titles",
+    "trailers": "Trailers",
+    "minutesApprox": "~{{minutes}} min",
+    "year": "{{year}}",
+    "loveBadge": "{{percent}}% loved this title",
+    "reviewsCount": "{{count}} reviews"
+  },
+
+  "courseInfo": {
+    "buyFor": "Buy — {{price}} €",
+    "play": "Play",
+    "replayTrailer": "Replay trailer",
+    "documents": "Documents",
+    "pdfHint": "PDF booklet & resources",
+    "open": "Open",
+    "download": "Download",
+    "tabs": {
+      "episodes": "Episodes",
+      "similar": "Similar titles",
+      "trailers": "Trailers"
+    },
+    "empty": {
+      "episodes": "No episodes available.",
+      "similar": "No recommendations yet.",
+      "trailers": "No trailer available."
+    },
+    "topbar": {
+      "close": "Close",
+      "mute": "Mute",
+      "unmute": "Unmute"
+    },
+    "quick": {
+      "myList": "My List",
+      "inMyList": "In My List",
+      "rate": "Rate",
+      "notForMe": "Not for me",
+      "iLikeIt": "I like it",
+      "loveIt": "Love it!",
+      "share": "Share"
+    },
+    "ratePopover": {
+      "title": "Your rating",
+      "notForMe": "Not for me",
+      "iLikeIt": "I like it",
+      "loveIt": "Love it!"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "Share this title",
+    "shareVia": "Share via…",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "cancel": "Cancel",
+    "copyPrompt": "Copy this link:"
   },
 
   "alerts": {
     "loginToBuy": "Please sign in to buy",
-    "loginToUseList": "Please sign in to use My List"
+    "loginToUseList": "Please sign in to use My List",
+    "loginToRate": "Please sign in to rate",
+    "linkCopied": "Link copied to clipboard",
+    "somethingWentWrong": "Something went wrong. Please try again later."
   },
 
   "cert": {
     "needQuizSuccess": "You must pass the quiz to generate your certificate."
+  },
+
+  "actions": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Retry"
   }
 }

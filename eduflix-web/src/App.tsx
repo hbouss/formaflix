@@ -8,6 +8,8 @@ import SignUp from "./pages/SignUp";
 import QuizPage from "./pages/Quiz";
 import MyList from "./pages/MyList.tsx";
 import MobileCourseInfo from "./pages/MobileCourseInfo";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
         <Route path="/my-list" element={<MyList/>}/>
         <Route path="/quiz/:id" element={<QuizPage/>}/>
         <Route path="/info/:id" element={<MobileCourseInfo/>} />
+        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );

@@ -47,8 +47,8 @@ type UserShape = { username: string; email?: string };
 type AuthState = {
   user?: UserShape | null;
   token?: string | null;
-  signIn: (username: string, password: string) => Promise<boolean>;
-  signUp: (username: string, email: string, password: string) => Promise<boolean>;
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signUp: (username: string, email: string, password: string, first_name?: string, last_name?: string) => Promise<boolean>;
   refresh: () => Promise<boolean>;
   signOut: () => void;
 };
@@ -62,9 +62,9 @@ export const useAuth = create<AuthState>((set, get) => ({
   user: savedUser,                              // ✅ on restaure le user
   token: savedAccess,                           // ✅ on restaure le token
 
-  async signIn(username, password) {
+  async signIn(email, password) {
     try {
-      const { data } = await client.post("/auth/token/", { username, password });
+      const { data } = await client.post("/auth/token/", { email, password });
       // SimpleJWT renvoie { access, refresh } si configuré
       localStorage.setItem("eduflix_token", data.access);
       if (data.refresh) localStorage.setItem("eduflix_refresh", data.refresh);
@@ -72,8 +72,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       // On calcule/complète l’utilisateur
       const payload = decodeJwt(data.access);
       const user: UserShape = {
-        username: payload?.username || username,
-        email: payload?.email,
+        username: payload?.username || (email?.split("@")[0] ?? ""),
+        email: payload?.email || email,
       };
       // ✅ on le persiste pour l’UI
       localStorage.setItem("eduflix_user", JSON.stringify(user));
@@ -88,11 +88,30 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  async signUp(username, email, password) {
+  // src/store/auth.ts
+  async signUp(
+    username: string,
+    email: string,
+    password: string,
+    first_name?: string,
+    last_name?: string
+  ) {
     try {
-      await client.post("/auth/register/", { username, email, password });
+      await client.post("/auth/register/", {
+        username,
+        email,
+        password,
+        first_name, // <-- on envoie bien snake_case attendu par l'API
+        last_name,  // <--
+      });
       return true;
-    } catch {
+    } catch (e: any) {
+      // Optionnel: aide au debug
+      const detail =
+        e?.response?.data
+          ? JSON.stringify(e.response.data)
+          : e?.message || "Inscription échouée";
+      console.error("Register error:", detail);
       return false;
     }
   },

@@ -12,6 +12,11 @@ class Lesson(models.Model):
     # existant: lien externe (mp4 hébergé)
     video_url = models.URLField(blank=True)
 
+    # 👉 nouveaux champs Cloudflare Stream
+    cf_uid = models.CharField(max_length=64, blank=True, db_index=True)  # UID de l'asset
+    cf_playback_id = models.CharField(max_length=64, blank=True)  # playbackId
+    cf_ready = models.BooleanField(default=False)  # prêt à lire
+
     duration_seconds = models.PositiveIntegerField(default=0)
     is_free_preview = models.BooleanField(default=False)
 

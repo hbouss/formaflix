@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "الرئيسية",
@@ -8,22 +8,28 @@
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
     "signOut": "تسجيل الخروج",
-    "helloUser": "مرحبًا، {{username}}"
+    "helloUser": "مرحبًا، {{username}}",
+    "profile": "ملفي الشخصي",
+    "search": "بحث"
   },
 
   "hero": {
     "watchBuy": "مشاهدة / شراء {{price}}",
-    "moreInfo": "مزيد من المعلومات"
+    "moreInfo": "مزيد من المعلومات",
+    "mute": "كتم الصوت",
+    "unmute": "إلغاء الكتم",
+    "watchTrailer": "مشاهدة الإعلان",
+    "replayTrailer": "إعادة الإعلان"
   },
 
   "home": {
     "continueWatching": "تابع المشاهدة",
-    "editorPicks": "اختيارات المحررين",
+    "editorPicks": "اكتشف دورتك المفضلة التالية",
     "top10Today": "أفضل 10 دورات اليوم",
     "packs": "حِزم كاملة",
     "bestsellers": "الأكثر مبيعًا",
     "trending": "الرائج",
-    "new": "الجديد"
+    "new": "إصدارات جديدة"
   },
 
   "card": {
@@ -39,7 +45,9 @@
     "takeQuiz": "بدء الاختبار",
     "viewCertificate": "عرض شهادتي",
     "getCertificate": "الحصول على الشهادة",
-    "resumeAt": "المتابعة عند {{time}}"
+    "resumeAt": "المتابعة عند {{time}}",
+    "nextLesson": "الحلقة التالية",
+    "previousLesson": "الحلقة السابقة"
   },
 
   "course": {
@@ -49,15 +57,91 @@
     "buyNow": "اشترِ الآن",
     "addToList": "أضِف إلى قائمتي",
     "removeFromList": "إزالة من قائمتي",
-    "preview": "معاينة"
+    "preview": "معاينة",
+    "about": "نبذة",
+    "episodes": "الحلقات",
+    "genres": "الفئات",
+    "similar": "عناوين مشابهة",
+    "trailers": "الإعلانات",
+    "minutesApprox": "~{{minutes}} دقيقة",
+    "year": "{{year}}",
+    "loveBadge": "{{percent}}% أحبّوا هذا العنوان",
+    "reviewsCount": "{{count}} مراجعة"
+  },
+
+  "courseInfo": {
+    "buyFor": "اشترِ — {{price}} €",
+    "play": "تشغيل",
+    "replayTrailer": "إعادة تشغيل الإعلان",
+    "documents": "المستندات",
+    "pdfHint": "كتيّب PDF وموارد",
+    "open": "فتح",
+    "download": "تنزيل",
+    "tabs": {
+      "episodes": "الحلقات",
+      "similar": "عناوين مشابهة",
+      "trailers": "الإعلانات"
+    },
+    "empty": {
+      "episodes": "لا توجد حلقات متاحة.",
+      "similar": "لا توجد توصيات حاليًا.",
+      "trailers": "لا يتوفر إعلان."
+    },
+    "topbar": {
+      "close": "إغلاق",
+      "mute": "كتم الصوت",
+      "unmute": "إلغاء الكتم"
+    },
+    "quick": {
+      "myList": "قائمتي",
+      "inMyList": "في قائمتي",
+      "rate": "قيّم",
+      "notForMe": "غير مناسب لي",
+      "iLikeIt": "أعجبني",
+      "loveIt": "أعشقه!",
+      "share": "مشاركة"
+    },
+    "ratePopover": {
+      "title": "تقييمك",
+      "notForMe": "غير مناسب لي",
+      "iLikeIt": "أعجبني",
+      "loveIt": "أعشقه!"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "مشاركة هذا العنوان",
+    "shareVia": "المشاركة عبر…",
+    "copyLink": "نسخ الرابط",
+    "linkCopied": "تم نسخ الرابط",
+    "cancel": "إلغاء",
+    "copyPrompt": "انسخ هذا الرابط:"
+    ,
+    "copiedToast": "تم النسخ إلى الحافظة"
   },
 
   "alerts": {
     "loginToBuy": "سجّل الدخول للشراء",
-    "loginToUseList": "سجّل الدخول لاستخدام «قائمتي»"
+    "loginToUseList": "سجّل الدخول لاستخدام «قائمتي»",
+    "loginToRate": "سجّل الدخول للتقييم",
+    "linkCopied": "تم نسخ الرابط إلى الحافظة",
+    "somethingWentWrong": "حدث خطأ ما. حاول مرة أخرى لاحقًا."
   },
 
   "cert": {
     "needQuizSuccess": "يجب أن تُنجز الاختبار بنجاح لإنشاء شهادتك."
+  },
+
+  "actions": {
+    "ok": "حسنًا",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "retry": "إعادة المحاولة"
   }
 }

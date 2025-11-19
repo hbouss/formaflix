@@ -28,20 +28,19 @@ const NavLink = ({ to, labelKey }: { to: string; labelKey: string }) => {
 
 export default function Navbar() {
   const { t } = useTranslation();
-  const { user, token, signOut } = useAuth(); // ⬅️ on récupère aussi token
+  const { user, token, signOut } = useAuth();
   const nav = useNavigate();
 
-  // Fallback fiable pour le nom si user est encore null mais token présent
   const savedUser = (() => {
     try {
       const s = localStorage.getItem("eduflix_user");
-      return s ? JSON.parse(s) as { username?: string } : null;
+      return s ? (JSON.parse(s) as { username?: string }) : null;
     } catch {
       return null;
     }
   })();
   const displayName = user?.username ?? savedUser?.username ?? "";
-  const isAuthed = !!(token || user); // ⬅️ on considère connecté si token présent
+  const isAuthed = !!(token || user);
 
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -58,7 +57,7 @@ export default function Navbar() {
       }`}
       style={{ height: 72 }}
     >
-      <div className="mx-auto max-w-[1500px] h-full px-6 flex items-center gap-8">
+      <div className="mx-auto max-w-[1500px] h-full px-3 sm:px-6 flex items-center gap-3 md:gap-8">
         {/* Logo */}
         <Link
           to="/"
@@ -75,16 +74,21 @@ export default function Navbar() {
           {t("brand")}
         </Link>
 
+        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           <NavLink to="/" labelKey="nav.home" />
           <NavLink to="/library" labelKey="nav.library" />
           <NavLink to="/my-list" labelKey="nav.myList" />
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        {/* Right side */}
+        <div className="ml-auto flex items-center gap-2 md:gap-3">
+          {/* Langue – toujours visible */}
           <LanguageMenu />
+
           {isAuthed ? (
             <>
+              {/* Desktop */}
               <span className="hidden sm:block text-sm opacity-80" style={{ fontFamily: NAV_FONT }}>
                 {t("nav.helloUser", { username: displayName || t("nav.signIn") })}
               </span>
@@ -93,7 +97,19 @@ export default function Navbar() {
                   signOut();
                   nav("/");
                 }}
-                className="text-sm px-3 py-1 rounded bg-white/10 hover:bg-white/20"
+                className="hidden md:inline-flex text-sm px-3 py-1.5 rounded bg-white/10 hover:bg-white/20"
+                style={{ fontFamily: NAV_FONT }}
+              >
+                {t("nav.signOut")}
+              </button>
+
+              {/* Mobile */}
+              <button
+                onClick={() => {
+                  signOut();
+                  nav("/");
+                }}
+                className="md:hidden inline-flex items-center justify-center h-9 px-3 rounded-full bg-white/10 hover:bg-white/15 text-[12px] leading-none font-semibold tracking-wide active:scale-[.98] whitespace-nowrap text-center"
                 style={{ fontFamily: NAV_FONT }}
               >
                 {t("nav.signOut")}
@@ -101,20 +117,41 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link
-                to="/signin"
-                className="text-sm px-3 py-1 rounded bg-white/10 hover:bg-white/20"
-                style={{ fontFamily: NAV_FONT }}
-              >
-                {t("nav.signIn")}
-              </Link>
-              <Link
-                to="/signup"
-                className="text-sm px-3 py-1 rounded bg-white text-black"
-                style={{ fontFamily: NAV_FONT }}
-              >
-                {t("nav.signUp")}
-              </Link>
+              {/* Desktop (>= md) */}
+              <div className="hidden md:flex items-center gap-2">
+                <Link
+                  to="/signin"
+                  className="text-sm px-3 py-1.5 rounded bg-white/10 hover:bg-white/20"
+                  style={{ fontFamily: NAV_FONT }}
+                >
+                  {t("nav.signIn")}
+                </Link>
+                <Link
+                  to="/signup"
+                  className="text-sm px-3 py-1.5 rounded bg-white text-black"
+                  style={{ fontFamily: NAV_FONT }}
+                >
+                  {t("nav.signUp")}
+                </Link>
+              </div>
+
+              {/* Mobile (< md) */}
+              <div className="md:hidden flex items-center gap-1.5">
+                <Link
+                  to="/signin"
+                  className="inline-flex items-center justify-center h-9 px-3 rounded-full ring-1 ring-white/20 bg-white/5 hover:bg-white/10 text-white/95 text-[12px] leading-none font-semibold tracking-wide active:scale-[.98] whitespace-nowrap text-center"
+                  style={{ fontFamily: NAV_FONT }}
+                >
+                  {t("nav.signInShort", { defaultValue: "Connexion" })}
+                </Link>
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center justify-center h-9 px-3 rounded-full bg-[#E50914] hover:bg-[#f6121d] text-white text-[12px] leading-none font-semibold tracking-wide shadow-[0_6px_12px_rgba(229,9,20,0.35)] active:scale-[.98] whitespace-nowrap text-center"
+                  style={{ fontFamily: NAV_FONT }}
+                >
+                  {t("nav.signUpShort", { defaultValue: "S’inscrire" })}
+                </Link>
+              </div>
             </>
           )}
         </div>

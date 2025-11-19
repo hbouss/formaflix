@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "Accueil",
@@ -8,14 +8,18 @@
     "signIn": "Connexion",
     "signUp": "Créer un compte",
     "signOut": "Se déconnecter",
-    "helloUser": "Bonjour, {{username}}"
+    "helloUser": "Bonjour, {{username}}",
+    "profile": "Mon profil",
+    "search": "Rechercher"
   },
 
   "hero": {
     "watchBuy": "Lecture / Acheter {{price}}",
     "moreInfo": "Plus d'infos",
-    "mute": "Mute",
-    "unmute": "Unmute"
+    "mute": "Couper le son",
+    "unmute": "Activer le son",
+    "watchTrailer": "Voir la bande-annonce",
+    "replayTrailer": "Revoir la bande-annonce"
   },
 
   "home": {
@@ -41,7 +45,9 @@
     "takeQuiz": "Passer le quiz",
     "viewCertificate": "Voir mon certificat",
     "getCertificate": "Obtenir mon certificat",
-    "resumeAt": "Reprendre à {{time}}"
+    "resumeAt": "Reprendre à {{time}}",
+    "nextLesson": "Épisode suivant",
+    "previousLesson": "Épisode précédent"
   },
 
   "course": {
@@ -54,15 +60,86 @@
     "preview": "Aperçu",
     "about": "À propos",
     "episodes": "Épisodes",
-    "genres": "Genres"
+    "genres": "Genres",
+    "similar": "Titres similaires",
+    "trailers": "Bandes-annonces",
+    "minutesApprox": "~{{minutes}} min",
+    "year": "{{year}}",
+    "loveBadge": "{{percent}}% ont adoré ce titre",
+    "reviewsCount": "{{count}} avis"
+  },
+
+  "courseInfo": {
+    "buyFor": "Acheter — {{price}} €",
+    "play": "Lecture",
+    "replayTrailer": "Revoir la bande-annonce",
+    "documents": "Documents",
+    "pdfHint": "Livret PDF & ressources",
+    "open": "Ouvrir",
+    "download": "Télécharger",
+    "tabs": {
+      "episodes": "Épisodes",
+      "similar": "Titres similaires",
+      "trailers": "Bandes-annonces"
+    },
+    "empty": {
+      "episodes": "Aucun épisode disponible.",
+      "similar": "Aucune recommandation pour le moment.",
+      "trailers": "Pas de bande-annonce disponible."
+    },
+    "topbar": {
+      "close": "Fermer",
+      "mute": "Couper le son",
+      "unmute": "Activer le son"
+    },
+    "quick": {
+      "myList": "Ma liste",
+      "inMyList": "Dans ma liste",
+      "rate": "Évaluer",
+      "notForMe": "Pas pour moi",
+      "iLikeIt": "J’aime bien",
+      "loveIt": "J’adore !",
+      "share": "Partager"
+    },
+    "ratePopover": {
+      "title": "Votre avis",
+      "notForMe": "Pas pour moi",
+      "iLikeIt": "J’aime bien",
+      "loveIt": "J’adore !"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "Partager ce titre",
+    "shareVia": "Partager via…",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
+    "cancel": "Annuler",
+    "copyPrompt": "Copiez ce lien :"
   },
 
   "alerts": {
     "loginToBuy": "Connecte-toi pour acheter",
-    "loginToUseList": "Connecte-toi pour utiliser Ma liste"
+    "loginToUseList": "Connecte-toi pour utiliser Ma liste",
+    "loginToRate": "Connecte-toi pour donner ton avis",
+    "linkCopied": "Lien copié dans le presse-papiers",
+    "somethingWentWrong": "Une erreur est survenue. Réessaie plus tard."
   },
 
   "cert": {
     "needQuizSuccess": "Tu dois d’abord réussir le quiz pour générer ton certificat."
+  },
+
+  "actions": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "retry": "Réessayer"
   }
 }

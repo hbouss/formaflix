@@ -1,11 +1,11 @@
 from rest_framework import viewsets, permissions
-from .models import Course
+from .models import Course, Rating
 from .serializers import CourseListSerializer, CourseDetailSerializer
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -49,4 +49,37 @@ def home_rails(request):
         "top10": ser(top10),
         "packs": ser(packs),
         "bestsellers": ser(bestsellers),
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def rate_course(request):
+    course_id = request.data.get("course_id")
+    value = request.data.get("value")
+    try:
+        value = int(value)
+    except:
+        return Response({"detail": "value invalide"}, status=400)
+    if value not in (-1, 1, 2):
+        return Response({"detail": "value doit être -1, 1 ou 2"}, status=400)
+
+    try:
+        course = Course.objects.get(pk=course_id, is_active=True)
+    except Course.DoesNotExist:
+        return Response({"detail": "Cours introuvable"}, status=404)
+
+    r, _created = Rating.objects.update_or_create(
+        course=course, user=request.user, defaults={"value": value}
+    )
+
+    love_count = course.ratings.filter(value=2).count()
+    ratings_total = course.ratings.exclude(value=0).count()
+    love_percent = int(round(100 * love_count / ratings_total)) if ratings_total else 0
+
+    return Response({
+        "user_rating": r.value,
+        "love_count": love_count,
+        "ratings_total": ratings_total,
+        "love_percent": love_percent,
     })

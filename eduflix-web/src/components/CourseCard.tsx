@@ -1,7 +1,7 @@
-// src/components/CourseCard.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CourseLite } from "../api/types";
 import { Link, useNavigate } from "react-router-dom";
+import Hls from "hls.js";
 
 type ResumeInfo = { percent: number; resume_position_seconds: number };
 
@@ -18,29 +18,46 @@ function useDeviceFlags() {
   return flags;
 }
 
+/** Transforme une URL trailer (incluant l’iframe Cloudflare) en src jouable.
+ *  - https://iframe.videodelivery.net/<ID> → https://videodelivery.net/<ID>/manifest/video.m3u8
+ *  - laisse passer mp4 ou m3u8 directs
+ */
+function normalizeTeaserSrc(val?: string): string {
+  const s = (val || "").trim();
+  if (!s) return "";
+  const m = s.match(/iframe\.videodelivery\.net\/([a-z0-9]+)/i);
+  if (m) return `https://videodelivery.net/${m[1]}/manifest/video.m3u8`;
+  return s;
+}
+
 export default function CourseCard({
   course,
   owned = false,
   resume,
-  onInfo, // affiché seulement si NON possédé
+  onInfo,   // bouton "Infos" (desktop)
+  onBuy,    // bouton "Acheter" (desktop)
 }: {
   course: CourseLite;
   owned?: boolean;
   resume?: ResumeInfo;
   onInfo?: (c: CourseLite) => void;
+  onBuy?: (c: CourseLite) => void;
 }) {
   const nav = useNavigate();
   const { isTouch, hasHover } = useDeviceFlags();
 
-  // ----- Aperçu vidéo desktop seulement
+  // Aperçu vidéo : desktop uniquement
   const enablePreview = hasHover && !isTouch;
-  const [hover, setHover] = useState(false);
+
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  const [hover, setHover] = useState(false);
   const [inView, setInView] = useState(false);
   const [videoSrc, setVideoSrc] = useState<string>("");
 
-  // Détection visibilité (pour ne charger la vidéo qu'à l'écran)
+  // Détection visibilité (charger la vidéo seulement à l’écran)
   useEffect(() => {
     if (!enablePreview || !cardRef.current) return;
     const io = new IntersectionObserver(
@@ -51,8 +68,8 @@ export default function CourseCard({
     return () => io.disconnect();
   }, [enablePreview]);
 
-  // Ne pose la src vidéo QUE si hover + inView
-  const teaser = useMemo<string>(() => {
+  // Teaser brut → normalisé (Cloudflare iframe → m3u8)
+  const rawTeaser = useMemo<string>(() => {
     return (
       (course as any).trailer_src ||
       (course as any).trailer_file ||
@@ -61,22 +78,71 @@ export default function CourseCard({
     );
   }, [course]);
 
+  const teaser = useMemo(() => normalizeTeaserSrc(rawTeaser), [rawTeaser]);
+
+  // Ne pose la src QUE si hover + inView
   useEffect(() => {
     if (!enablePreview || !teaser) {
       setVideoSrc("");
       return;
     }
-    if (hover && inView) setVideoSrc(teaser);
-    else setVideoSrc("");
+    setVideoSrc(hover && inView ? teaser : "");
   }, [enablePreview, teaser, hover, inView]);
 
-  // Lecture/pause (desktop) quand le src est posé
+  // Attache/détache HLS si besoin quand videoSrc change
+  useEffect(() => {
+    const v = videoRef.current;
+    // cleanup ancien HLS
+    if (hlsRef.current) {
+      try { hlsRef.current.destroy(); } catch {}
+      hlsRef.current = null;
+    }
+    if (!v) return;
+
+    // retire un éventuel src précédent
+    try {
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+    } catch {}
+
+    if (!videoSrc) return;
+
+    const isM3U8 = /\.m3u8($|\?)/i.test(videoSrc);
+    const canNativeHls = v.canPlayType("application/vnd.apple.mpegurl") !== "";
+
+    if (isM3U8 && !canNativeHls && Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hlsRef.current = hls;
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        hls.loadSource(videoSrc);
+      });
+    } else {
+      // Safari (natif) ou MP4
+      v.src = videoSrc;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        try { hlsRef.current.destroy(); } catch {}
+        hlsRef.current = null;
+      }
+    };
+  }, [videoSrc]);
+
+  // Lecture/pause quand on montre/masque l’aperçu
   useEffect(() => {
     if (!enablePreview) return;
     const v = videoRef.current;
     if (!v) return;
-    if (videoSrc && hover) v.play().catch(() => {});
-    else {
+
+    if (videoSrc && hover) {
+      v.muted = true;
+      // @ts-ignore
+      v.playsInline = true;
+      v.play().catch(() => {});
+    } else {
       try {
         v.pause();
         v.currentTime = 0;
@@ -86,26 +152,45 @@ export default function CourseCard({
 
   // ----- Action au tap (mobile)
   const handleTap = () => {
-    if (!isTouch) return; // on laisse desktop gérer via boutons
+    if (!isTouch) return;
     if (owned) nav(`/player/${course.id}`);
-    else if (onInfo) onInfo(course);
-    else nav(`/course/${course.id}`);
+    else nav(`/info/${course.id}`);
   };
 
-  // Données visuelles
+  // Visuels
   const thumbnail = (course as any).thumbnail || "";
   const percent = resume?.percent ?? 0;
   const showProgress = owned && percent > 0;
 
-  // Composants d’actions (desktop uniquement)
-  const Primary = () => (
-    <Link
-      to={owned ? `/player/${course.id}` : `/course/${course.id}`}
-      className="px-2 py-1 text-[12px] rounded bg-white text-black hover:bg-neutral-200 font-semibold"
-    >
-      {owned ? "Lecture" : "Aperçu"}
-    </Link>
-  );
+  // Composants d’actions (desktop)
+  const Primary = () => {
+    if (owned) {
+      return (
+        <Link
+          to={`/player/${course.id}`}
+          className="px-2 py-1 text-[12px] rounded bg-white text-black hover:bg-neutral-200 font-semibold"
+        >
+          Lecture
+        </Link>
+      );
+    }
+    return onBuy ? (
+      <button
+        type="button"
+        onClick={() => onBuy(course)}
+        className="px-2 py-1 text-[12px] rounded bg-white text-black hover:bg-neutral-200 font-semibold"
+      >
+        Acheter
+      </button>
+    ) : (
+      <Link
+        to={`/course/${course.id}`}
+        className="px-2 py-1 text-[12px] rounded bg-white text-black hover:bg-neutral-200 font-semibold"
+      >
+        Aperçu
+      </Link>
+    );
+  };
 
   const Secondary = () =>
     !owned ? (
@@ -119,7 +204,7 @@ export default function CourseCard({
         </button>
       ) : (
         <Link
-          to={`/course/${course.id}`}
+          to={`/info/${course.id}`}
           className="px-2 py-1 text-[12px] rounded bg-white/20 hover:bg-white/30"
         >
           Infos
@@ -133,21 +218,15 @@ export default function CourseCard({
       className="group relative shrink-0 w-[230px] sm:w-[260px] aspect-video rounded-md overflow-hidden bg-black cursor-pointer"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      onClick={handleTap} // 👉 mobile: toute la carte est cliquable
+      onClick={handleTap}
     >
-      {/* Poster — toujours visible */}
-      <img
-        src={thumbnail}
-        alt={course.title}
-        loading="lazy"
-        className="w-full h-full object-cover"
-      />
+      {/* Poster */}
+      <img src={thumbnail} alt={course.title} loading="lazy" className="w-full h-full object-cover" />
 
-      {/* Aperçu vidéo – desktop only, jamais sur mobile */}
-      {enablePreview && videoSrc ? (
+      {/* Aperçu vidéo – desktop only */}
+      {enablePreview && (hover || videoSrc) ? (
         <video
           ref={videoRef}
-          src={videoSrc}
           muted
           playsInline
           autoPlay
@@ -178,11 +257,7 @@ export default function CourseCard({
           </div>
         )}
 
-        <div
-          className={`mt-2 flex items-center gap-2 transition-opacity ${
-            hover ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        <div className={`mt-2 flex items-center gap-2 transition-opacity ${hover ? "opacity-100" : "opacity-0"}`}>
           <Primary />
           <Secondary />
         </div>

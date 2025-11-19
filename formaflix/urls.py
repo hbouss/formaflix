@@ -2,13 +2,16 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from accounts.auth import EmailTokenObtainPairView
 from accounts.views import RegisterView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 # Importe tes vues API
-from catalog.views import CourseViewSet, home_rails
+from catalog.views import CourseViewSet, home_rails, rate_course
 from certificates.views import GenerateCertificateView, GetMyCertificateView
 from learning.views import MyLibraryView, MyListView, ProgressUpsertView, ContinueWatchingView, TrackDocumentDownloadView
+from learning.views_cf import cf_stream_webhook
 from payments.views import create_checkout_session, checkout_session_status
 from payments.webhooks import stripe_webhook
 
@@ -30,13 +33,17 @@ urlpatterns = [
     path("api/payments/session-status/", checkout_session_status),
     path("api/payments/webhook/", stripe_webhook),
     path("api/auth/register/", RegisterView.as_view()),
-    path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/", include("accounts.urls")),
+    path("api/auth/token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 # Learning
     path("api/learning/my-library/", MyLibraryView.as_view()),
     path("api/learning/my-list/", MyListView.as_view()),
     path("api/learning/progress/", ProgressUpsertView.as_view()),
     path("api/learning/continue-watching/", ContinueWatchingView.as_view()),
+    path("api/catalog/rate/", rate_course),
+    path("api/stream/webhook/", cf_stream_webhook),
+    path("webhooks/cf-stream/<slug:secret>/", cf_stream_webhook, name="cf_stream_webhook"),
     # Quiz
     path("api/quizzes/<int:course_id>/", QuizDetailView.as_view()),
     path("api/quizzes/<int:course_id>/submit/", QuizSubmitView.as_view()),

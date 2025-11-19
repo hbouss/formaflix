@@ -1,5 +1,5 @@
 {
-  "brand": "Eduflix",
+  "brand": "Beautyflix",
 
   "nav": {
     "home": "Домой",
@@ -8,12 +8,18 @@
     "signIn": "Войти",
     "signUp": "Создать аккаунт",
     "signOut": "Выйти",
-    "helloUser": "Привет, {{username}}"
+    "helloUser": "Привет, {{username}}",
+    "profile": "Мой профиль",
+    "search": "Поиск"
   },
 
   "hero": {
     "watchBuy": "Смотреть / Купить {{price}}",
-    "moreInfo": "Подробнее"
+    "moreInfo": "Подробнее",
+    "mute": "Без звука",
+    "unmute": "Включить звук",
+    "watchTrailer": "Смотреть трейлер",
+    "replayTrailer": "Повторить трейлер"
   },
 
   "home": {
@@ -27,8 +33,8 @@
   },
 
   "card": {
-    "accessIncluded": "Доступ включен",
-    "preview": "Превью",
+    "accessIncluded": "Доступ включён",
+    "preview": "Предпросмотр",
     "info": "Инфо",
     "play": "Воспроизвести"
   },
@@ -39,25 +45,102 @@
     "takeQuiz": "Пройти тест",
     "viewCertificate": "Посмотреть сертификат",
     "getCertificate": "Получить сертификат",
-    "resumeAt": "Продолжить с {{time}}"
+    "resumeAt": "Продолжить с {{time}}",
+    "nextLesson": "Следующий урок",
+    "previousLesson": "Предыдущий урок"
   },
 
   "course": {
     "content": "Содержание",
-    "documentsIncluded": "Включенные материалы:",
+    "documentsIncluded": "Включённые материалы:",
     "price": "Цена",
     "buyNow": "Купить сейчас",
-    "addToList": "Добавить в список",
-    "removeFromList": "Удалить из списка",
-    "preview": "Превью"
+    "addToList": "Добавить в мой список",
+    "removeFromList": "Удалить из моего списка",
+    "preview": "Предпросмотр",
+    "about": "О курсе",
+    "episodes": "Эпизоды",
+    "genres": "Жанры",
+    "similar": "Похожие материалы",
+    "trailers": "Трейлеры",
+    "minutesApprox": "~{{minutes}} мин",
+    "year": "{{year}}",
+    "loveBadge": "{{percent}}% понравился этот титул",
+    "reviewsCount": "{{count}} отзывов"
+  },
+
+  "courseInfo": {
+    "buyFor": "Купить — {{price}} €",
+    "play": "Воспроизвести",
+    "replayTrailer": "Повторить трейлер",
+    "documents": "Документы",
+    "pdfHint": "PDF-буклет и ресурсы",
+    "open": "Открыть",
+    "download": "Скачать",
+    "tabs": {
+      "episodes": "Эпизоды",
+      "similar": "Похожие",
+      "trailers": "Трейлеры"
+    },
+    "empty": {
+      "episodes": "Эпизоды недоступны.",
+      "similar": "Пока нет рекомендаций.",
+      "trailers": "Трейлер недоступен."
+    },
+    "topbar": {
+      "close": "Закрыть",
+      "mute": "Без звука",
+      "unmute": "Включить звук"
+    },
+    "quick": {
+      "myList": "Мой список",
+      "inMyList": "В моём списке",
+      "rate": "Оценить",
+      "notForMe": "Не для меня",
+      "iLikeIt": "Нравится",
+      "loveIt": "В восторге!",
+      "share": "Поделиться"
+    },
+    "ratePopover": {
+      "title": "Ваша оценка",
+      "notForMe": "Не для меня",
+      "iLikeIt": "Нравится",
+      "loveIt": "В восторге!"
+    }
+  },
+
+  "share": {
+    "sheetTitle": "Поделиться этим материалом",
+    "shareVia": "Поделиться через…",
+    "copyLink": "Скопировать ссылку",
+    "linkCopied": "Ссылка скопирована",
+    "cancel": "Отмена",
+    "copyPrompt": "Скопируйте ссылку:",
+    "copiedToast": "Скопировано в буфер обмена"
   },
 
   "alerts": {
     "loginToBuy": "Войдите, чтобы купить",
-    "loginToUseList": "Войдите, чтобы использовать «Мой список»"
+    "loginToUseList": "Войдите, чтобы использовать «Мой список»",
+    "loginToRate": "Войдите, чтобы оценить",
+    "linkCopied": "Ссылка скопирована в буфер обмена",
+    "somethingWentWrong": "Что-то пошло не так. Попробуйте позже."
   },
 
   "cert": {
     "needQuizSuccess": "Нужно успешно пройти тест, чтобы получить сертификат."
+  },
+
+  "actions": {
+    "ok": "ОК",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "next": "Далее",
+    "retry": "Повторить"
   }
 }
