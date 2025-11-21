@@ -10,3 +10,4 @@ django-cors-headers>=4.3
 whitenoise>=6.6
 Pillow>=10.0
 stripe>=7
+tuspy==1.0.4
