@@ -41,14 +41,23 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class DocumentSerializer(serializers.ModelSerializer):
+    open_url = serializers.SerializerMethodField()
+
+    def get_open_url(self, obj):
+        request = self.context.get("request")
+        url = f"/api/learning/documents/{obj.id}/open/"
+        return request.build_absolute_uri(url) if request else url
+
     class Meta:
         model = Document
-        fields = ["id", "title", "file"]
+        fields = ["id", "title", "file", "open_url"]  # <-- NE PLUS renvoyer "file" au front
 
 
 class CourseListSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field="slug", many=True, read_only=True)
     trailer_src = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()  # ✅ absolu
+    hero_banner = serializers.SerializerMethodField()
 
     # (Optionnel) Si tu veux afficher un badge "% ont adoré" directement sur les cards,
     # dé-commente les 3 lignes ci-dessous et ajoute-les aussi dans Meta.fields :
@@ -57,6 +66,20 @@ class CourseListSerializer(serializers.ModelSerializer):
     #     total = obj.ratings.exclude(value=0).count()
     #     love = obj.ratings.filter(value=2).count()
     #     return int(round(100 * love / total)) if total else 0
+
+    def get_thumbnail(self, obj):
+        if not obj.thumbnail:
+            return ""
+        r = self.context.get("request")
+        url = obj.thumbnail.url
+        return r.build_absolute_uri(url) if r else url
+
+    def get_hero_banner(self, obj):
+        if not getattr(obj, "hero_banner", None):
+            return ""
+        r = self.context.get("request")
+        url = obj.hero_banner.url
+        return r.build_absolute_uri(url) if r else url
 
     def get_trailer_src(self, obj):
         from learning.services.cloudflare_stream import build_hls_url
@@ -73,7 +96,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
-            "id", "title", "slug", "synopsis", "thumbnail", "trailer_src",
+            "id", "title", "slug", "synopsis", "thumbnail", "hero_banner", "trailer_src",
             "price_cents", "currency", "categories",
             # "love_percent",  # ← dé-commente si tu actives le badge en liste
         ]
@@ -84,12 +107,24 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
     documents = DocumentSerializer(many=True, read_only=True)
     trailer_src = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
+    hero_banner = serializers.SerializerMethodField()
 
     # --- Champs d’évaluation pour l’écran détail ---
     love_count = serializers.SerializerMethodField()
     ratings_total = serializers.SerializerMethodField()
     love_percent = serializers.SerializerMethodField()
     user_rating = serializers.SerializerMethodField()  # -1, 0, 1, 2
+
+    def get_thumbnail(self, obj):
+        if not obj.thumbnail: return ""
+        r = self.context.get("request")
+        return r.build_absolute_uri(obj.thumbnail.url) if r else obj.thumbnail.url
+
+    def get_hero_banner(self, obj):
+        if not getattr(obj, "hero_banner", None): return ""
+        r = self.context.get("request")
+        return r.build_absolute_uri(obj.hero_banner.url) if r else obj.hero_banner.url
 
     def get_trailer_src(self, obj):
         from learning.services.cloudflare_stream import build_hls_url

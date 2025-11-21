@@ -10,8 +10,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 # Importe tes vues API
 from catalog.views import CourseViewSet, home_rails, rate_course
 from certificates.views import GenerateCertificateView, GetMyCertificateView
-from learning.views import MyLibraryView, MyListView, ProgressUpsertView, ContinueWatchingView, TrackDocumentDownloadView
+from learning.views import MyLibraryView, MyListView, ProgressUpsertView, ContinueWatchingView, \
+    TrackDocumentDownloadView, OpenDocumentView
 from learning.views_cf import cf_stream_webhook
+from learning.views_docs import DocumentOpenView
 from payments.views import create_checkout_session, checkout_session_status
 from payments.webhooks import stripe_webhook
 
@@ -49,6 +51,8 @@ urlpatterns = [
     path("api/quizzes/<int:course_id>/submit/", QuizSubmitView.as_view()),
     # Certificates
     path("api/learning/documents/<int:doc_id>/track/", TrackDocumentDownloadView.as_view()),
+    path("api/learning/documents/<int:doc_id>/open/",  DocumentOpenView.as_view()),  # ⬅️ ajoute ça
+    path("api/learning/documents/<int:doc_id>/open/", OpenDocumentView.as_view()),
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),

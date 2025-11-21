@@ -90,6 +90,10 @@ MEDIA_URL = "/media/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# ⬇️ Permet d’overrider en prod (Railway):
+STATIC_ROOT = Path(os.getenv("STATIC_ROOT", STATIC_ROOT))
+MEDIA_ROOT  = Path(os.getenv("MEDIA_ROOT", MEDIA_ROOT))
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {

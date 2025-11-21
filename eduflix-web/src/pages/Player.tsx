@@ -9,7 +9,7 @@ import CourseModal from "../components/CourseModal";
 import { useAuth } from "../store/auth";
 import MobileTabbar from "../components/MobileTabbar"; // ✅ NEW
 
-type DocLite = { id: number; title: string; file: string };
+type DocLite = { id: number; title: string; file?: string; open_url: string };
 
 // Recommandations (lite)
 type RecCourse = {
@@ -92,35 +92,98 @@ export default function Player() {
     return fallback;
   };
 
-  const openDoc = (doc: DocLite) => {
-    client.post(`/learning/documents/${doc.id}/track/`).catch(() => {});
-    if (isMobile()) setDocViewer(doc);
-    else clickNewTab(doc.file);
-  };
+  const openDoc = async (doc: DocLite) => {
+  // tracking non bloquant
+  void client.post(`/learning/documents/${doc.id}/track/`).catch(() => {});
 
-  const downloadDoc = async (doc: DocLite) => {
-    client.post(`/learning/documents/${doc.id}/track/`).catch(() => {});
-    const safeName = sanitizeFilename(doc.title || "document") + ".pdf";
-    try {
-      const res = await fetch(doc.file, { credentials: "include" });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filenameFromCD(res.headers.get("content-disposition"), safeName);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch {
-      const a = document.createElement("a");
-      a.href = doc.file;
-      a.download = safeName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+  // --- MOBILE : ouvrir la ressource MEDIA publique (pas d’Authorization possible en navigation) ---
+  if (isMobile()) {
+    if (doc.file) {
+      window.location.href = `${doc.file}#toolbar=1&navpanes=0&zoom=page-width`;
+      return;
     }
-  };
+    // fallback si jamais 'file' absent
+    if (doc.open_url) {
+      window.location.href = `${doc.open_url}${doc.open_url.includes("?") ? "&" : "?"}disposition=inline`;
+      return;
+    }
+    alert("Ouverture du PDF impossible (aucune URL disponible). Essayez le téléchargement.");
+    return;
+  }
+
+  // --- DESKTOP : on passe par l'endpoint protégé pour envoyer le JWT automatiquement (axios client) ---
+  try {
+    const url = doc.open_url || `/learning/documents/${doc.id}/open/`;
+    const res = await client.get(url, {
+      responseType: "blob",
+      params: { disposition: "inline" },
+    });
+    const blob = res.data as Blob;
+    const href = URL.createObjectURL(blob);
+    clickNewTab(href);
+    setTimeout(() => URL.revokeObjectURL(href), 60000);
+  } catch (e) {
+    // Fallback : ouvre directement le MEDIA si dispo
+    if (doc.file) {
+      clickNewTab(`${doc.file}#toolbar=1&navpanes=0&zoom=page-width`);
+      return;
+    }
+    alert("Ouverture du PDF impossible. Utilisez le bouton « Télécharger ».");
+  }
+};
+
+const downloadDoc = async (doc: DocLite) => {
+  // tracking (non bloquant)
+  void client.post(`/learning/documents/${doc.id}/track/`).catch(() => {});
+
+  const fallbackName = sanitizeFilename(doc.title || "document") + ".pdf";
+
+  // 1) priorité : endpoint protégé qui renvoie Content-Disposition: attachment
+  try {
+    const url = doc.open_url || `/learning/documents/${doc.id}/open/`;
+    const res = await client.get(url, {
+      responseType: "blob",
+      params: { disposition: "attachment" },
+    });
+
+    const cd = (res.headers?.["content-disposition"] as string) || "";
+    const fname = filenameFromCD(cd, fallbackName);
+
+    const href = URL.createObjectURL(res.data as Blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = fname; // force le téléchargement
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 60_000);
+    return;
+  } catch {
+    // continue vers fallback
+  }
+
+  // 2) fallback : récupérer le MEDIA public en blob puis forcer le download
+  try {
+    if (doc.file) {
+      const r = await fetch(doc.file);
+      const blob = await r.blob();
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = fallbackName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 60_000);
+      return;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  // 3) dernier recours : message (on NE PAS ouvre le doc)
+  alert("Téléchargement impossible pour le moment.");
+};
 
   useEffect(() => {
     if (!id) return;
@@ -803,16 +866,16 @@ export default function Player() {
             {/* Aperçu */}
             <div className="bg-black/40">
               <object
-                data={`${docViewer.file}#toolbar=1&navpanes=0&zoom=page-width`}
-                type="application/pdf"
-                className="w-full"
-                style={{ height: "65vh" }}
-              >
-                <embed
-                  src={`${docViewer.file}#toolbar=1&navpanes=0&zoom=page-width`}
+                data={`${docViewer.open_url}#toolbar=1&navpanes=0&zoom=page-width`}
                   type="application/pdf"
                   className="w-full"
                   style={{ height: "65vh" }}
+                >
+                  <embed
+                    src={`${docViewer.open_url}#toolbar=1&navpanes=0&zoom=page-width`}
+                    type="application/pdf"
+                    className="w-full"
+                    style={{ height: "65vh" }}
                 />
                 <div className="p-4 text-center text-sm opacity-80">
                   {t("player.pdfPreviewUnavailable", {
@@ -826,7 +889,7 @@ export default function Player() {
             {/* Actions */}
             <div className="p-3 grid grid-cols-2 gap-2" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
               <button
-                onClick={() => clickNewTab(docViewer.file)}
+                onClick={() => clickNewTab(docViewer.open_url)}
                 className="h-12 rounded-md bg-white text-black font-semibold grid place-items-center"
               >
                 🔗 {t("courseInfo.open", { defaultValue: "Ouvrir" })}

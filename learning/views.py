@@ -1,7 +1,12 @@
+import mimetypes
+import os
+from pathlib import Path
+
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import FileResponse, Http404
 
 from catalog.models import Course
 from .models import Enrollment, Favorite, Lesson, Progress, Document, DocumentDownload
@@ -112,3 +117,40 @@ class TrackDocumentDownloadView(APIView):
             return Response({"detail": "not enrolled"}, status=403)
         DocumentDownload.objects.create(enrollment=enrollment, document=doc)
         return Response({"ok": True})
+
+
+class OpenDocumentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, doc_id: int):
+        doc = get_object_or_404(Document, pk=doc_id)
+
+        # Doit être inscrit au cours
+        enrollment = Enrollment.objects.filter(user=request.user, course=doc.course).first()
+        if not enrollment:
+            return Response({"detail": "not enrolled"}, status=403)
+
+        if not doc.file:
+            raise Http404("file missing")
+
+        fpath = doc.file.path
+        if not os.path.exists(fpath):
+            # 404 -> sinon le navigateur va télécharger une page HTML
+            raise Http404("file missing on disk")
+
+        # type MIME
+        mime, _ = mimetypes.guess_type(fpath)
+        mime = mime or "application/pdf"
+
+        # inline (aperçu) par défaut, attachment si ?disposition=attachment
+        disp = request.GET.get("disposition", "inline")
+        if disp not in ("inline", "attachment"):
+            disp = "inline"
+
+        filename = Path(fpath).name
+        resp = FileResponse(open(fpath, "rb"), content_type=mime)
+        resp["Content-Disposition"] = f'{disp}; filename="{filename}"'
+        resp["X-Content-Type-Options"] = "nosniff"
+        # évite caches agressifs côté proxy
+        resp["Cache-Control"] = "private, max-age=0, no-store"
+        return resp
