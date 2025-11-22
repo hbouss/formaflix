@@ -25,7 +25,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from quizzes.views import QuizDetailView, QuizSubmitView
-from views_smtp_test import send_test_mail
+from views_smtp_test import send_test_mail, smtp_send
 
 router = DefaultRouter()
 router.register(r"catalog/courses", CourseViewSet, basename="course")
@@ -77,6 +77,6 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
     path("smtp/ping/", smtp_ping),
-    path("smtp/test/", send_test_mail),
+    path("smtp/send/", smtp_send),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

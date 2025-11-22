@@ -1,28 +1,33 @@
-# formaflix/views_smtp_test.py
-import socket, smtplib
+# core/views_smtp.py
 from django.conf import settings
+from django.core.mail import get_connection, send_mail
 from django.http import JsonResponse
-from django.core.mail import send_mail
 
 def smtp_ping(request):
-    host = settings.EMAIL_HOST
-    port = settings.EMAIL_PORT
-    timeout = getattr(settings, "EMAIL_TIMEOUT", 60)
     try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return JsonResponse({"ok": True, "host": host, "port": port})
+        with get_connection(
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=settings.EMAIL_HOST_USER,
+            password=settings.EMAIL_HOST_PASSWORD,
+            use_tls=settings.EMAIL_USE_TLS,
+            timeout=getattr(settings, "EMAIL_TIMEOUT", 30),
+        ) as conn:
+            conn.open()  # force le handshake
+        return JsonResponse({"ok": True})
     except Exception as e:
-        return JsonResponse({"ok": False, "host": host, "port": port, "error": str(e)})
+        return JsonResponse({"ok": False, "error": str(e)}, status=500)
 
-def send_test_mail(request):
+def smtp_send(request):
+    to = request.GET.get("to", "hichem.boussouar@gmail.com")
     try:
-        sent = send_mail(
-            subject="Test SMTP Formaflix",
-            message="Hello from Django via Brevo ✅",
+        n = send_mail(
+            subject="SMTP test Formaflix",
+            message="Hello depuis Railway via Brevo ✅",
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[request.GET.get("to", settings.EMAIL_HOST_USER)],
+            recipient_list=[to],
             fail_silently=False,
         )
-        return JsonResponse({"ok": True, "sent": sent})
+        return JsonResponse({"sent": n, "to": to})
     except Exception as e:
-        return JsonResponse({"ok": False, "error": repr(e)})
+        return JsonResponse({"sent": 0, "error": str(e)}, status=500)
