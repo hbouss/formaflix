@@ -25,6 +25,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from quizzes.views import QuizDetailView, QuizSubmitView
+from views_smtp_test import send_test_mail
 
 router = DefaultRouter()
 router.register(r"catalog/courses", CourseViewSet, basename="course")
