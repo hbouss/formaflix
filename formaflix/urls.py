@@ -25,25 +25,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from quizzes.views import QuizDetailView, QuizSubmitView
-from views_smtp_test import send_test_mail, smtp_send
+from views_smtp_test import smtp_ping, smtp_send
 
 router = DefaultRouter()
 router.register(r"catalog/courses", CourseViewSet, basename="course")
 
 
-
-def smtp_ping(request):
-    try:
-        send_mail(
-            "Test SMTP",
-            "Hello from Formaflix.",
-            "no-reply@sbeautyflix.com",
-            [request.GET.get("to", "hichem.boussouar@gmail.com")],
-            fail_silently=False,
-        )
-        return JsonResponse({"ok": True})
-    except Exception as e:
-        return JsonResponse({"ok": False, "error": str(e)})
 
 urlpatterns = [
     path("admin/", admin.site.urls),
