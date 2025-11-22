@@ -163,15 +163,18 @@ EMAIL_BACKEND = (
     if DEBUG else
     "django.core.mail.backends.smtp.EmailBackend"
 )
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@tondomaine.com")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@sbeautyflix.com")
 
 # SMTP prod (ex: Brevo/SendGrid/Mailgun) — mets ça dans Railway variables
-EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "apikey")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "1") == "1"
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "0") == "1"
+
+if not DEBUG and not EMAIL_HOST_PASSWORD:
+    raise ValueError("EMAIL_HOST_PASSWORD manquant en production")
 
 # Lien de destination pour le reset (ton frontend)
 # ex prod: https://beautyflix.app (Pages)

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.core.mail import send_mail
+from django.http import HttpResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -24,6 +26,17 @@ from quizzes.views import QuizDetailView, QuizSubmitView
 
 router = DefaultRouter()
 router.register(r"catalog/courses", CourseViewSet, basename="course")
+
+
+def ping_email(request):
+    send_mail(
+        subject="Test Brevo SMTP",
+        message="Ça marche ✅",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=["hichem.boussouar@gmail.com"],  # remplace par ton adresse
+        fail_silently=False,
+    )
+    return HttpResponse("Email envoyé")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -56,4 +69,5 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
+    path("health/send-email/", ping_email),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
