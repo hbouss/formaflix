@@ -110,7 +110,7 @@ TEMPLATES = [
 
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = "/data/staticfiles"
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", "/data/media"))
 
 STORAGES = {
