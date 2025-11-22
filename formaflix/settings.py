@@ -61,6 +61,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# WhiteNoise: utilise l’ancien champ (ne pas mélanger avec STORAGES)
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # --- derrière le proxy HTTPS de Railway ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
@@ -110,14 +114,12 @@ TEMPLATES = [
 
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-STATIC_ROOT = "/data/staticfiles"
+# on met les static DANS l'image (pas sur /data)
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# media peut rester sur /data si tu veux persister les uploads
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", "/data/media"))
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
