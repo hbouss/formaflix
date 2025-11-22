@@ -66,8 +66,19 @@ if not DEBUG:
 
 # --- derrière le proxy HTTPS de Railway ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+X_FRAME_OPTIONS = "DENY"
+
+# CORS : restreint au front
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://sbeautyflix.com",
+    "https://www.sbeautyflix.com",
+  ]
 
 # --- CSRF trusted origins via ENV ---
 CSRF_TRUSTED_ORIGINS = [
