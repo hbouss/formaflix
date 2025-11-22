@@ -31,31 +31,30 @@ router.register(r"catalog/courses", CourseViewSet, basename="course")
 
 
 
+def smtp_ping(request):
+    # Test connexion TCP simple au SMTP (sans auth)
+    import socket, time
+    start = time.time()
+    try:
+        s = socket.create_connection((settings.EMAIL_HOST, int(settings.EMAIL_PORT)), timeout=5)
+        s.close()
+        return JsonResponse({"ok": True, "stage": "tcp_connect", "elapsed_ms": int((time.time()-start)*1000)})
+    except Exception as e:
+        return JsonResponse({"ok": False, "stage": "tcp_connect", "error": str(e)}, status=500)
+
 def send_email_health(request):
     try:
-        conn = get_connection(
-            host=settings.EMAIL_HOST,
-            port=settings.EMAIL_PORT,
-            username=settings.EMAIL_HOST_USER,
-            password=settings.EMAIL_HOST_PASSWORD,
-            use_tls=settings.EMAIL_USE_TLS,
-            use_ssl=settings.EMAIL_USE_SSL,
-            timeout=getattr(settings, "EMAIL_TIMEOUT", 10),
+        # test envoi réel via backend SMTP par défaut
+        sent = send_mail(
+            subject="Formaflix SMTP health",
+            message="It works ✅",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            fail_silently=False,
         )
-        msg = EmailMessage(
-            "Formaflix SMTP health",
-            "It works ✅",
-            settings.DEFAULT_FROM_EMAIL,
-            [settings.DEFAULT_FROM_EMAIL],  # envoi vers toi
-        )
-        conn.send_messages([msg])
-        return JsonResponse({"ok": True})
-    except smtplib.SMTPAuthenticationError as e:
-        return JsonResponse({"ok": False, "type":"auth", "code":getattr(e, "smtp_code", None), "msg":str(e)}, status=500)
-    except (smtplib.SMTPException, socket.error) as e:
-        return JsonResponse({"ok": False, "type":"smtp", "msg":str(e)}, status=500)
+        return JsonResponse({"ok": True, "sent": sent})
     except Exception as e:
-        return JsonResponse({"ok": False, "type":"other", "msg":str(e)}, status=500)
+        return JsonResponse({"ok": False, "stage": "send_mail", "error": str(e)}, status=500)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -88,5 +87,7 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
+    path("health/smtp-ping/", smtp_ping),
     path("health/send-email/", send_email_health),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
