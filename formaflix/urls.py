@@ -63,4 +63,13 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+from django.conf import settings
+from django.views.static import serve as media_serve
+from django.urls import re_path
+
+# Sert les fichiers MEDIA depuis le volume, même quand DEBUG=False
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", media_serve, {"document_root": settings.MEDIA_ROOT}),
+]
