@@ -3,10 +3,10 @@ import smtplib, socket
 from django.contrib import admin
 from django.core.mail import send_mail, EmailMessage, get_connection
 from django.http import HttpResponse, JsonResponse
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-
+from django.views.static import serve as media_serve
 from accounts.auth import EmailTokenObtainPairView
 from accounts.views import RegisterView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -63,4 +63,9 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# ➜ Ajoute ceci pour servir les MEDIA en prod
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", media_serve, {"document_root": settings.MEDIA_ROOT}),
+]
