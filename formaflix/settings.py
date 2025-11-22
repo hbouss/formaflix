@@ -67,11 +67,15 @@ STORAGES = {
     },
 }
 
+# (Et ajoute aussi, par précaution rétro-compat 3.x/4.0)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # --- derrière le proxy HTTPS de Railway ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 X_FRAME_OPTIONS = "DENY"
@@ -115,14 +119,8 @@ TEMPLATES = [
 
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = Path(os.getenv("STATIC_ROOT", "/data/staticfiles"))
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", "/data/media"))
-
-# ⬇️ Permet d’overrider en prod (Railway):
-STATIC_ROOT = Path(os.getenv("STATIC_ROOT", STATIC_ROOT))
-MEDIA_ROOT  = Path(os.getenv("MEDIA_ROOT", MEDIA_ROOT))
-
-CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
