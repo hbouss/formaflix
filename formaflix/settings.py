@@ -80,6 +80,8 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "https://sbeautyflix.com",
     "https://www.sbeautyflix.com",
+    "https://formaflix.vercel.app",
+    "https://formaflix-git-main-sbeautyflixs-projects.vercel.app"
   ]
 
 # --- CSRF trusted origins via ENV ---
@@ -176,13 +178,6 @@ if not DEBUG and not EMAIL_HOST_PASSWORD:
     raise ValueError("EMAIL_HOST_PASSWORD manquant en production")
 
 
-LOGGING = {
-    "version": 1,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {
-        "django.core.mail": {"handlers": ["console"], "level": "DEBUG"},
-    },
-}
 
 # Lien de destination pour le reset (ton frontend)
 # ex prod: https://beautyflix.app (Pages)
