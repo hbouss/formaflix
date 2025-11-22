@@ -75,8 +75,7 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
-    path("health/smtp-ping/", smtp_ping),
+    path("smtp/ping/", smtp_ping),
+    path("smtp/test/", send_test_mail),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-urlpatterns += [path("smtp-ping/", smtp_ping)]
