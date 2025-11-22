@@ -32,29 +32,17 @@ router.register(r"catalog/courses", CourseViewSet, basename="course")
 
 
 def smtp_ping(request):
-    # Test connexion TCP simple au SMTP (sans auth)
-    import socket, time
-    start = time.time()
     try:
-        s = socket.create_connection((settings.EMAIL_HOST, int(settings.EMAIL_PORT)), timeout=5)
-        s.close()
-        return JsonResponse({"ok": True, "stage": "tcp_connect", "elapsed_ms": int((time.time()-start)*1000)})
-    except Exception as e:
-        return JsonResponse({"ok": False, "stage": "tcp_connect", "error": str(e)}, status=500)
-
-def send_email_health(request):
-    try:
-        # test envoi réel via backend SMTP par défaut
-        sent = send_mail(
-            subject="Formaflix SMTP health",
-            message="It works ✅",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+        send_mail(
+            "Test SMTP",
+            "Hello from Formaflix.",
+            "no-reply@sbeautyflix.com",
+            [request.GET.get("to", "hichem.boussouar@gmail.com")],
             fail_silently=False,
         )
-        return JsonResponse({"ok": True, "sent": sent})
+        return JsonResponse({"ok": True})
     except Exception as e:
-        return JsonResponse({"ok": False, "stage": "send_mail", "error": str(e)}, status=500)
+        return JsonResponse({"ok": False, "error": str(e)})
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -88,6 +76,7 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
     path("health/smtp-ping/", smtp_ping),
-    path("health/send-email/", send_email_health),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [path("smtp-ping/", smtp_ping)]
