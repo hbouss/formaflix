@@ -1,6 +1,8 @@
+import smtplib, socket
+
 from django.contrib import admin
-from django.core.mail import send_mail
-from django.http import HttpResponse
+from django.core.mail import send_mail, EmailMessage, get_connection
+from django.http import HttpResponse, JsonResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -28,15 +30,32 @@ router = DefaultRouter()
 router.register(r"catalog/courses", CourseViewSet, basename="course")
 
 
-def ping_email(request):
-    send_mail(
-        subject="Test Brevo SMTP",
-        message="Ça marche ✅",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=["hichem.boussouar@gmail.com"],  # remplace par ton adresse
-        fail_silently=False,
-    )
-    return HttpResponse("Email envoyé")
+
+def send_email_health(request):
+    try:
+        conn = get_connection(
+            host=settings.EMAIL_HOST,
+            port=settings.EMAIL_PORT,
+            username=settings.EMAIL_HOST_USER,
+            password=settings.EMAIL_HOST_PASSWORD,
+            use_tls=settings.EMAIL_USE_TLS,
+            use_ssl=settings.EMAIL_USE_SSL,
+            timeout=getattr(settings, "EMAIL_TIMEOUT", 10),
+        )
+        msg = EmailMessage(
+            "Formaflix SMTP health",
+            "It works ✅",
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.DEFAULT_FROM_EMAIL],  # envoi vers toi
+        )
+        conn.send_messages([msg])
+        return JsonResponse({"ok": True})
+    except smtplib.SMTPAuthenticationError as e:
+        return JsonResponse({"ok": False, "type":"auth", "code":getattr(e, "smtp_code", None), "msg":str(e)}, status=500)
+    except (smtplib.SMTPException, socket.error) as e:
+        return JsonResponse({"ok": False, "type":"smtp", "msg":str(e)}, status=500)
+    except Exception as e:
+        return JsonResponse({"ok": False, "type":"other", "msg":str(e)}, status=500)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -69,5 +88,5 @@ urlpatterns = [
     path("api/certificates/<int:course_id>/generate/", GenerateCertificateView.as_view()),
     path("api/certificates/<int:course_id>/mine/", GetMyCertificateView.as_view()),
     path("api/catalog/home-rails/", home_rails),
-    path("health/send-email/", ping_email),
+    path("health/send-email/", send_email_health),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
