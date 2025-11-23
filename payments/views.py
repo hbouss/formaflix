@@ -8,6 +8,7 @@ from catalog.models import Course
 from orders.models import Order, OrderItem
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+FRONTEND_BASE = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -42,8 +43,8 @@ def create_checkout_session(request):
             "quantity": 1,
         }],
         # ⬇️ redirige directement vers le lecteur du cours
-        success_url=f"http://localhost:5173/player/{course.id}?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url="http://localhost:5173/cancel",
+        success_url=f"{FRONTEND_BASE}/player/{course.id}?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{FRONTEND_BASE}/cancel",
         customer_email=getattr(request.user, "email", None),
         metadata={"order_id": str(order.id), "course_id": str(course.id)},
     )
