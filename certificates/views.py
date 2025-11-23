@@ -1,6 +1,7 @@
 # certificates/api.py
-import io, uuid, os
+import uuid, os
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -8,17 +9,16 @@ from django.http import HttpResponseBadRequest
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
-from catalog.models import Course
 from certificates.models import Certificate
 from quizzes.models import Quiz, Submission
 from learning.models import Enrollment
 
 from PIL import Image, ImageDraw, ImageFont
 
-BASE_DIR = getattr(settings, "BASE_DIR", os.path.dirname(os.path.dirname(__file__)))
-CERT_TEMPLATE_PATH = os.path.join(BASE_DIR, "certificates", "assets", "sbeauty_certificate.jpg")
-FONT_BOLD_PATH = os.path.join(BASE_DIR, "certificates", "assets", "fonts", "PlayfairDisplay-Bold.ttf")
+APP_DIR = Path(__file__).resolve().parent
+
+CERT_TEMPLATE_PATH = APP_DIR / "assets" / "sbeauty_certificate.jpg"
+FONT_BOLD_PATH = APP_DIR / "assets" / "fonts" / "PlayfairDisplay-Bold.ttf"
 
 def _fit_font(draw, text: str, font_path: str, max_width_px: int, start_size: int, min_size: int = 26):
     size = start_size
