@@ -1,3 +1,4 @@
+// src/components/RowCarousel.tsx
 import { useEffect, useRef, useState } from "react";
 import type { CourseLite, ContinueItem } from "../api/types";
 import CourseCard from "./CourseCard";
@@ -15,7 +16,7 @@ export default function RowCarousel({
   onBuy,
 }: {
   title: string;
-  items: CourseLite[];
+  items: CourseLite[] | undefined | null;   // ✅ peut être undefined/null
   owned?: boolean;
   ranked?: boolean;
   onInfo?: (c: CourseLite) => void;
@@ -25,23 +26,43 @@ export default function RowCarousel({
   const ref = useRef<HTMLDivElement>(null);
   const [resumeById, setResumeById] = useState<Record<number, ResumeInfo>>({});
 
+  // ✅ sécurise toujours items en tableau
+  const safeItems: CourseLite[] = Array.isArray(items) ? items : [];
+
   useEffect(() => {
     const isContinue = title.toLowerCase().includes("continuer");
-    if (!owned || !isContinue) { setResumeById({}); return; }
-    client.get<ContinueItem[]>("/learning/continue-watching/").then(({ data }) => {
-      const map: Record<number, ResumeInfo> = {};
-      data.forEach(ci => {
-        map[ci.course.id] = { percent: ci.percent, resume_position_seconds: ci.resume_position_seconds };
-      });
-      setResumeById(map);
-    }).catch(() => setResumeById({}));
+    if (!owned || !isContinue) {
+      setResumeById({});
+      return;
+    }
+    client
+      .get<ContinueItem[]>("/learning/continue-watching/")
+      .then(({ data }) => {
+        const map: Record<number, ResumeInfo> = {};
+        data.forEach((ci) => {
+          map[ci.course.id] = {
+            percent: ci.percent,
+            resume_position_seconds: ci.resume_position_seconds,
+          };
+        });
+        setResumeById(map);
+      })
+      .catch(() => setResumeById({}));
   }, [title, owned]);
 
   const scroll = (dir: "left" | "right") => {
     if (!ref.current) return;
     const delta = ref.current.clientWidth * 0.9;
-    ref.current.scrollBy({ left: dir === "left" ? -delta : delta, behavior: "smooth" });
+    ref.current.scrollBy({
+      left: dir === "left" ? -delta : delta,
+      behavior: "smooth",
+    });
   };
+
+  // ✅ si pas d’items, on n’affiche rien (et surtout pas de .map)
+  if (safeItems.length === 0) {
+    return null;
+  }
 
   return (
     <section className="relative mt-6 sm:mt-8">
@@ -71,7 +92,7 @@ export default function RowCarousel({
         ref={ref}
         className="flex gap-3 overflow-x-auto px-4 sm:px-[4vw] pb-2 scroll-smooth snap-x no-scrollbar"
       >
-        {items.map((c, idx) => {
+        {safeItems.map((c, idx) => {
           const isOwned = owned || !!ownedById?.[c.id];
           return (
             <div key={c.id} className="relative snap-start">

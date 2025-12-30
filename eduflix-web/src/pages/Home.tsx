@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import type { CourseLite, ContinueItem, HomeRails } from "../api/types";
@@ -9,7 +10,11 @@ import RowCarousel from "../components/RowCarousel";
 import { useAuth } from "../store/auth";
 import CourseModal from "../components/CourseModal";
 import MobileTabbar from "../components/MobileTabbar";
-
+type LibraryEntry = {
+  course: {
+    id: number;
+  };
+};
 export default function Home() {
   const { t } = useTranslation();
   const nav = useNavigate();
@@ -42,12 +47,12 @@ export default function Home() {
       .then((res) => setContinueItems(res.data))
       .catch(() => {});
     client
-      .get("/learning/my-library/")
-      .then((r) => {
-        const s = new Set<number>((r.data as any[]).map((e: any) => e.course.id));
-        setOwnedIds(s);
-      })
-      .catch(() => setOwnedIds(new Set()));
+    .get<LibraryEntry[]>("/learning/my-library/")
+    .then((r) => {
+      const s = new Set<number>(r.data.map((e) => e.course.id));
+      setOwnedIds(s);
+    })
+    .catch(() => setOwnedIds(new Set()));
   }, [token]);
 
   const featured = courses[0];
@@ -100,10 +105,17 @@ export default function Home() {
 };
 
   return (
-    <div
+        <div
       className="relative min-h-dvh bg-black text-white"
       style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
     >
+      <Helmet>
+        <title>Formations esthétiques en ligne | SBeautyflix</title>
+        <meta
+          name="description"
+          content="Formations beauté en ligne : microblading, extensions de cils, hydrafacial, dermaplaning, BB Glow… Accès illimité à tes masterclass esthétiques avec SBeautyflix."
+        />
+      </Helmet>
       <Navbar />
 
       <Hero
@@ -147,6 +159,26 @@ export default function Home() {
       </div>
 
       {modalCourseId !== null && <CourseModal courseId={modalCourseId} onClose={() => setModalCourseId(null)} />}
+
+
+            {/* Bloc texte SEO sous les carrousels */}
+      <section className="max-w-4xl mx-auto px-4 pb-12 mt-10 text-sm md:text-base text-neutral-200 space-y-3">
+        <h1 className="text-2xl md:text-3xl font-extrabold mb-2">
+          Formations esthétiques en ligne & masterclass beauté
+        </h1>
+        <p>
+          SBeautyflix est la plateforme de formations esthétiques en ligne pensée pour les
+          professionnelles de la beauté : microblading, extensions de cils, hydrafacial, dermaplaning,
+          BB Glow, browlift, microneedling et bien plus. Tu apprends à ton rythme, depuis chez toi,
+          avec des masterclass filmées en haute qualité.
+        </p>
+        <p>
+          Chaque formation esthétique en ligne inclut un accès illimité aux vidéos, des livrets PDF
+          détaillés, des protocoles, et un certificat SBeauty Academy. Que tu démarres dans le métier
+          ou que tu veuilles te perfectionner, tu trouves sur SBeautyflix des contenus concrets et
+          directement applicables en institut.
+        </p>
+      </section>
 
       <MobileTabbar />
     </div>

@@ -2,7 +2,9 @@
 import axios, { AxiosError } from "axios";
 import i18n from "../i18n";
 
-export const API_BASE = import.meta.env.VITE_API_BASE;
+export const API_BASE = import.meta.env.VITE_API_BASE ?? "https://sbeautyflix.com/api";
+
+console.log("API_BASE =", API_BASE);   // 🔍 TEMPORAIRE
 
 const client = axios.create({
   baseURL: API_BASE,

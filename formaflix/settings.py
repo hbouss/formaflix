@@ -81,7 +81,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://sbeautyflix.com",
     "https://www.sbeautyflix.com",
     "https://formaflix.vercel.app",
-    "https://formaflix-git-main-sbeautyflixs-projects.vercel.app"
+    "https://formaflix-git-main-sbeautyflixs-projects.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.1.15:5173",  # 👈 ton front local réel
   ]
 
 # --- CSRF trusted origins via ENV ---

@@ -1,6 +1,7 @@
 // src/pages/Course.tsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import client from "../api/client";
 import type { CourseDetail } from "../api/types";
 import Navbar from "../components/Navbar";
@@ -70,11 +71,22 @@ export default function Course() {
 
   if (!course) return null;
 
+  const priceEuros = (course.price_cents / 100).toFixed(2);
+  const shortDescription =
+    course.synopsis || course.description?.slice(0, 160) || "Formation esthétique en ligne sur SBeautyflix.";
+
   // ✅ Sécuriser les catégories pour TS (et pour l’exécution)
   const categories = course.categories ?? [];
 
-  return (
+    return (
     <div className="bg-black min-h-screen text-white">
+      <Helmet>
+        <title>{`${course.title} | Formation esthétique en ligne – SBeautyflix`}</title>
+        <meta
+          name="description"
+          content={`${shortDescription} Formation beauté en ligne à ${priceEuros} € sur SBeautyflix, avec vidéos, livret PDF et certificat SBeauty Academy.`}
+        />
+      </Helmet>
       <Navbar />
 
       {/* ===== Hero Netflix-like (vidéo/image + gradient + actions) ===== */}

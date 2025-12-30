@@ -1,4 +1,6 @@
-// src/pages/MobileCourseInfo.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import client from "../api/client";
@@ -6,6 +8,7 @@ import type { CourseDetail, CourseLite } from "../api/types";
 import { useAuth } from "../store/auth";
 import MobileTabbar from "../components/MobileTabbar";
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet";
 
 // --- Helpers Cloudflare Stream (HLS) ---
 
@@ -55,6 +58,9 @@ function isTrueEnd(v: HTMLVideoElement) {
 }
 
 /** mini teaser muet, limité à un extrait court (previewSeconds) — rejouable via replayTrigger */
+// --- Helpers Cloudflare Stream (HLS) ---
+// ... (normalizeTeaserSrc, isM3U8, attachHlsIfNeeded, isTrueEnd restent identiques au-dessus)
+
 function TeaserLayer({
   src,
   poster,
@@ -75,9 +81,11 @@ function TeaserLayer({
   const vref = useRef<HTMLVideoElement | null>(null);
   const [visible, setVisible] = useState(false);
   const hlsRef = useRef<{ destroy(): void } | null>(null);
-  const limit = typeof previewSeconds === "number" && previewSeconds > 0 ? previewSeconds : null;
 
-  // --- iOS early-end workaround (optionnel) ---
+  // ✅ plus de typeof : soit un nombre > 0, soit null
+  const limit = previewSeconds && previewSeconds > 0 ? previewSeconds : null;
+
+  // --- iOS early-end workaround ---
   const startedAtRef = useRef<number>(0);
   const seenPlayingRef = useRef(false);
   const triedMp4Ref = useRef(false);
@@ -96,9 +104,19 @@ function TeaserLayer({
     if (!v || !src) return;
 
     // reset
-    try { v.pause(); v.removeAttribute("src"); v.load(); } catch {}
+    try {
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+    } catch (error) {
+      void error; // évite no-unused-vars / no-empty
+    }
     setVisible(false);
-    try { hlsRef.current?.destroy(); } catch {}
+    try {
+      hlsRef.current?.destroy();
+    } catch (error) {
+      void error;
+    }
     hlsRef.current = null;
     triedMp4Ref.current = false;
     seenPlayingRef.current = false;
@@ -107,25 +125,32 @@ function TeaserLayer({
     // réglages autoplay mobile
     try {
       v.muted = true;
-      // @ts-ignore
-      v.defaultMuted = true;
       v.playsInline = true;
       v.poster = poster;
-      v.loop = false;                // ✅ lecture complète, pas de boucle
-    } catch {}
+      v.loop = false;
+    } catch (error) {
+      void error;
+    }
 
     let cancelled = false;
 
     const start = async () => {
       try {
         const hls = await attachHlsIfNeeded(v, src);
-        if (cancelled) { hls?.destroy?.(); return; }
+        if (cancelled) {
+          hls?.destroy?.();
+          return;
+        }
         hlsRef.current = hls;
         const p = v.play();
         if (p && typeof (p as Promise<void>).then === "function") {
-          (p as Promise<void>).catch(() => onError?.());
+          p.catch((error) => {
+            void error;
+            onError?.();
+          });
         }
-      } catch {
+      } catch (error) {
+        void error;
         onError?.();
       }
     };
@@ -134,11 +159,19 @@ function TeaserLayer({
     return () => {
       cancelled = true;
       clearTimeout(t);
-      try { v.pause(); } catch {}
-      try { hlsRef.current?.destroy(); } catch {}
+      try {
+        v.pause();
+      } catch (error) {
+        void error;
+      }
+      try {
+        hlsRef.current?.destroy();
+      } catch (error) {
+        void error;
+      }
       hlsRef.current = null;
     };
-  }, [src, replayTrigger, poster]);
+  }, [src, replayTrigger, poster, onError]);
 
   // sync mute
   useEffect(() => {
@@ -147,18 +180,27 @@ function TeaserLayer({
     v.muted = muted;
     v.loop = false;
     if (!muted) {
-      const p = v.play(); if (p && typeof p.then === "function") p.catch(() => {});
+      const p = v.play();
+      if (p && typeof (p as Promise<void>).then === "function") {
+        p.catch((error) => {
+          void error;
+        });
+      }
     }
   }, [muted]);
 
   const onTimeUpdate = () => {
-    if (limit === null) return; // pas de coupe quand illimité
+    if (limit == null) return; // pas de coupe quand illimité
     const v = vref.current;
     if (!v) return;
     const dur = isFinite(v.duration) ? v.duration : Number.POSITIVE_INFINITY;
     const threshold = Math.min(limit, Math.max(0, dur - 0.25));
     if (v.currentTime >= threshold) {
-      try { v.pause(); } catch {}
+      try {
+        v.pause();
+      } catch (error) {
+        void error;
+      }
       setVisible(false);
       onPreviewEnd?.();
     }
@@ -174,31 +216,43 @@ function TeaserLayer({
 
   const onEnded = async () => {
     const v = vref.current!;
-    // Cas lecture complète (pas de limite) → on veut déclencher le bouton "Revoir" UNIQUEMENT à la vraie fin
-    if (limit === null) {
+    // Cas lecture complète (pas de limite) → fin “vraie”
+    if (limit == null) {
       if (isTrueEnd(v)) {
+        try {
+          v.pause();
+        } catch (error) {
+          void error;
+        }
         setVisible(false);
-        onPreviewEnd?.(); // ✅ active "Revoir la bande-annonce"
+        onPreviewEnd?.();
         return;
       }
-      // ended trop tôt → on essaie de reprendre, puis fallback MP4 si tout de suite après le start
+      // ended trop tôt → on essaie de reprendre, puis fallback MP4 si besoin
       const elapsed = performance.now() - startedAtRef.current;
       const resumed = v.play();
       if (resumed && typeof (resumed as Promise<void>).then === "function") {
-        (resumed as Promise<void>).catch(async () => {
+        resumed.catch(async (error) => {
+          void error;
           if (!triedMp4Ref.current && elapsed < 3000) {
             const mp4 = mp4FallbackFromHls(src);
             if (mp4) {
               triedMp4Ref.current = true;
               try {
-                try { hlsRef.current?.destroy(); } catch {}
+                try {
+                  hlsRef.current?.destroy();
+                } catch (e2) {
+                  void e2;
+                }
                 hlsRef.current = null;
                 v.pause();
                 v.removeAttribute("src");
                 v.load();
                 v.src = mp4;
                 await v.play();
-              } catch { /* ignore */ }
+              } catch (e3) {
+                void e3;
+              }
             }
           }
         });
@@ -207,7 +261,11 @@ function TeaserLayer({
     }
 
     // limite active → fin de preview
-    try { v.pause(); } catch {}
+    try {
+      v.pause();
+    } catch (error) {
+      void error;
+    }
     setVisible(false);
     onPreviewEnd?.();
   };
@@ -223,13 +281,15 @@ function TeaserLayer({
       autoPlay
       preload="auto"
       onPlaying={onPlaying}
-      onWaiting={() => {/* no-op */}}
-      onStalled={() => {/* no-op */}}
+      onWaiting={() => undefined}
+      onStalled={() => undefined}
       onError={() => onError?.()}
       onEnded={onEnded}
       onTimeUpdate={onTimeUpdate}
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
-      style={{ pointerEvents: "none" }}     // ✅ pas de visibility:hidden
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+      style={{ pointerEvents: "none" }}
       aria-hidden="true"
       controlsList="nodownload noplaybackrate noremoteplayback"
       disablePictureInPicture
@@ -239,6 +299,10 @@ function TeaserLayer({
 
 type TabKey = "episodes" | "similar" | "trailers";
 type DocLite = { id: number; title: string; file: string };
+
+type ShareNavigator = Navigator & {
+  share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>;
+};
 
 export default function MobileCourseInfo() {
   const { t } = useTranslation("common");
@@ -271,7 +335,9 @@ export default function MobileCourseInfo() {
   // feuille de partage fallback
   const [showShare, setShowShare] = useState(false);
 
-  useEffect(() => localStorage.setItem("hero_muted", muted ? "1" : "0"), [muted]);
+  useEffect(() => {
+    localStorage.setItem("hero_muted", muted ? "1" : "0");
+  }, [muted]);
 
   // charger le cours
   useEffect(() => {
@@ -379,10 +445,14 @@ export default function MobileCourseInfo() {
     const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
 
     if (canNativeShare) {
-      // @ts-ignore
-      const p = navigator.share({ title, text, url });
-      if (p && typeof (p as Promise<void>).then === "function") {
-        (p as Promise<void>).catch(() => setShowShare(true));
+      const navWithShare = navigator as ShareNavigator;
+      if (!navWithShare.share) {
+        setShowShare(true);
+        return;
+      }
+      const p = navWithShare.share({ title, text, url });
+      if (p && typeof p.then === "function") {
+        p.catch(() => setShowShare(true));
       }
       return;
     }
@@ -440,248 +510,320 @@ export default function MobileCourseInfo() {
       </div>
     ) : null;
 
+  // SEO dynamique avec Helmet
+  const canonical = `${window.location.origin}/info/${courseId}`;
+  const metaTitle = `${course.title} – Formation esthétique en ligne | SBeautyflix`;
+  const metaDescription =
+    course.synopsis ||
+    (course.description ? course.description.slice(0, 155) : "Formations beauté et esthétique en ligne SBeautyflix.");
+  const rawImage = course.hero_banner || course.thumbnail;
+  const metaImage = rawImage && rawImage.startsWith("http")
+    ? rawImage
+    : `${window.location.origin}${rawImage ?? ""}`;
+
   // ---- UI ----
   return (
-    <div
-      className="relative min-h-dvh bg-black text-white"
-      style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
-    >
-      {/* zone video/top */}
-      <div className="sticky top-0 z-40">
-        <div className="relative w-full aspect-video bg-black">
-          <img src={bg} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
-          {teaser ? (
-            <TeaserLayer
-              src={teaser}
-              poster={bg}
-              muted={muted}
-              previewSeconds={0}
-              replayTrigger={replayTrigger}
-              onPreviewEnd={() => setCanReplay(true)} // ✅ activé à la vraie fin
-            />
-          ) : null}
+    <>
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonical} />
 
-          {/* close + mute */}
-          <button
-            onClick={() => nav(-1)}
-            aria-label={t("courseInfo.topbar.close", { defaultValue: "Fermer" })}
-            className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+8px)] h-10 w-10 grid place-items-center rounded-full bg-black/60 ring-1 ring-white/20"
-          >
-            ✕
-          </button>
-          {teaser ? (
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={metaImage} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={metaImage} />
+      </Helmet>
+
+      <div
+        className="relative min-h-dvh bg-black text-white"
+        style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        {/* zone video/top */}
+        <div className="sticky top-0 z-40">
+          <div className="relative w-full aspect-video bg-black">
+            <img src={bg} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+            {teaser ? (
+              <TeaserLayer
+                src={teaser}
+                poster={bg}
+                muted={muted}
+                previewSeconds={0}
+                replayTrigger={replayTrigger}
+                onPreviewEnd={() => setCanReplay(true)} // ✅ activé à la vraie fin
+              />
+            ) : null}
+
+            {/* close + mute */}
             <button
-              onClick={() => setMuted((m) => !m)}
-              aria-label={
-                muted
-                  ? t("courseInfo.topbar.unmute", { defaultValue: "Activer le son" })
-                  : t("courseInfo.topbar.mute", { defaultValue: "Couper le son" })
-              }
-              className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+56px)] h-10 w-10 grid place-items-center rounded-full bg-black/60 ring-1 ring-white/20"
+              onClick={() => nav(-1)}
+              aria-label={t("courseInfo.topbar.close", { defaultValue: "Fermer" })}
+              className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+8px)] h-10 w-10 grid place-items-center rounded-full bg-black/60 ring-1 ring-white/20"
             >
-              {muted ? (
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                  <path d="M5 15v-6h4l5-4v14l-5-4H5zM17.7 8.3l1.4 1.4-1.3 1.3 1.3 1.3-1.4 1.4-1.3-1.3-1.3 1.3-1.4-1.4 1.3-1.3-1.3-1.3 1.4-1.4 1.3 1.3 1.3-1.3z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                  <path d="M5 15v-6h4l5-4v14l-5-4H5zM19 12a5 5 0 0 0-2.2-4.1l1.2-1.6A7 7 0 0 1 21 12a7 7 0 0 1-3 5.7l-1.2-1.6A5 5 0 0 0 19 12z" />
-                </svg>
-              )}
+              ✕
             </button>
-          ) : null}
-        </div>
-      </div>
-
-      {/* contenu entête */}
-      <div className="px-4 py-4 space-y-4">
-        <div>
-          <h1 className="text-2xl font-extrabold">{course.title}</h1>
-          <div className="mt-1 text-sm opacity-80">
-            {course.created_at ? new Date(course.created_at).getFullYear() : ""} • {totalMinutes ? `~${totalMinutes} min` : ""}
+            {teaser ? (
+              <button
+                onClick={() => setMuted((m) => !m)}
+                aria-label={
+                  muted
+                    ? t("courseInfo.topbar.unmute", { defaultValue: "Activer le son" })
+                    : t("courseInfo.topbar.mute", { defaultValue: "Couper le son" })
+                }
+                className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+56px)] h-10 w-10 grid place-items-center rounded-full bg-black/60 ring-1 ring-white/20"
+              >
+                {muted ? (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M5 15v-6h4l5-4v14l-5-4H5zM17.7 8.3l1.4 1.4-1.3 1.3 1.3 1.3-1.4 1.4-1.3-1.3-1.3 1.3-1.4-1.4 1.3-1.3-1.3-1.3 1.4-1.4 1.3 1.3 1.3-1.3z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M5 15v-6h4l5-4v14l-5-4H5zM19 12a5 5 0 0 0-2.2-4.1l1.2-1.6A7 7 0 0 1 21 12a7 7 0 0 1-3 5.7l-1.2-1.6A5 5 0 0 0 19 12z" />
+                  </svg>
+                )}
+              </button>
+            ) : null}
           </div>
-          <LoveBadge />
         </div>
 
-        {/* CTA principal */}
-        <div className="space-y-2">
-          {ownedCurrent ? (
-            <button
-              onClick={play}
-              className="w-full h-12 rounded-md bg-white text-black font-semibold grid place-items-center"
-            >
-              {t("courseInfo.play", { defaultValue: "▶︎ Lecture" })}
-            </button>
-          ) : (
-            <button
-              onClick={buy}
-              className="w-full h-12 rounded-md bg-white text-black font-semibold grid place-items-center"
-            >
-              {
-                t("courseInfo.buyFor", {
+        {/* contenu entête */}
+        <div className="px-4 py-4 space-y-4">
+          <div>
+            <h1 className="text-2xl font-extrabold">{course.title}</h1>
+            <div className="mt-1 text-sm opacity-80">
+              {course.created_at ? new Date(course.created_at).getFullYear() : ""} •{" "}
+              {totalMinutes ? `~${totalMinutes} min` : ""}
+            </div>
+            <LoveBadge />
+          </div>
+
+          {/* CTA principal */}
+          <div className="space-y-2">
+            {ownedCurrent ? (
+              <button
+                onClick={play}
+                className="w-full h-12 rounded-md bg-white text-black font-semibold grid place-items-center"
+              >
+                {t("courseInfo.play", { defaultValue: "▶︎ Lecture" })}
+              </button>
+            ) : (
+              <button
+                onClick={buy}
+                className="w-full h-12 rounded-md bg-white text-black font-semibold grid place-items-center"
+              >
+                {t("courseInfo.buyFor", {
                   price: (course.price_cents / 100).toFixed(2),
                   defaultValue: "Acheter — {{price}} €",
-                }) as string
-              }
-            </button>
+                }) as string}
+              </button>
+            )}
+
+            {/* ⟲ Revoir la bande-annonce */}
+            {showReplayBtn && (
+              <button
+                disabled={!canReplay}
+                onClick={() => {
+                  setCanReplay(false);
+                  setReplayTrigger((x) => x + 1);
+                }}
+                className={`w-full h-12 rounded-md grid place-items-center transition ${
+                  canReplay ? "bg-white/10 text-white" : "bg-white/5 text-white/70 cursor-not-allowed"
+                }`}
+              >
+                {t("courseInfo.replayTrailer", { defaultValue: "⟲ Revoir la bande-annonce" })}
+              </button>
+            )}
+          </div>
+
+          {/* description courte */}
+          {course.description && (
+            <p className="text-[15px] leading-relaxed opacity-90">{course.description}</p>
           )}
 
-          {/* ⟲ Revoir la bande-annonce */}
-          {showReplayBtn && (
-            <button
-              disabled={!canReplay}
-              onClick={() => {
-                setCanReplay(false);
-                setReplayTrigger((x) => x + 1);
-              }}
-              className={`w-full h-12 rounded-md grid place-items-center transition ${
-                canReplay ? "bg-white/10 text-white" : "bg-white/5 text-white/70 cursor-not-allowed"
-              }`}
-            >
-              {t("courseInfo.replayTrailer", { defaultValue: "⟲ Revoir la bande-annonce" })}
-            </button>
+          {/* ======== DOCUMENTS ======== */}
+          {Array.isArray((course as any).documents) && (course as any).documents.length > 0 && (
+            <div className="mt-2">
+              <div className="text-sm font-semibold opacity-90 mb-2">
+                {t("player.documents", { defaultValue: "Documents" })}
+              </div>
+              <div className="flex gap-2 overflow-x-auto py-1 -mx-1 px-1">
+                {(course as any).documents.map((d: DocLite) => (
+                  <button
+                    key={d.id}
+                    onClick={() => (ownedCurrent ? setOpenDoc(d) : buy())}
+                    className={`shrink-0 px-3 py-2 rounded-lg bg-white/10 ring-1 ring-white/10
+                              flex items-center gap-2 ${ownedCurrent ? "" : "opacity-60"}`}
+                  >
+                    {/* icône PDF */}
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="currentColor"
+                      className="opacity-90"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1 7V3.5L19.5 9H15zM8.5 13h1v-1.5h1c.8 0 1.5-.7 1.5-1.5S11.3 8.5 10.5 8.5h-2v4.5zm1-3V9.5h1c.3 0 .5.2.5.5s-.2.5-.5.5h-1zM13 13h1v-1h1v-1h-1V9.5h1V8.5h-2V13zm3.5 0H18c.8 0 1.5-.7 1.5-1.5S18.8 10 18 10h-1V8.5h-1V13zm1-2c.3 0 .5.2.5.5s-.2.5-.5.5h-1v-1h1z" />
+                    </svg>
+                    <span className="text-sm max-w-[52vw] truncate">
+                      {d.title ||
+                        t("player.documents", { defaultValue: "Document" })}
+                    </span>
+                    {!ownedCurrent && <span className="text-xs ml-1">🔒</span>}
+                  </button>
+                ))}
+              </div>
+              <div className="text-xs opacity-60 mt-1">
+                {t("courseInfo.pdfHint", { defaultValue: "Livret PDF & ressources" })}
+              </div>
+            </div>
+          )}
+
+          {/* actions rapides */}
+          <QuickActions
+            rating={rating}
+            setShowRate={setShowRate}
+            inList={inList}
+            listBusy={listBusy}
+            toggleList={toggleList}
+            share={share}
+          />
+
+          {/* Popover Évaluer */}
+          {showRate && (
+            <RatePopover
+              busy={rateBusy}
+              rating={rating}
+              onPick={sendRating}
+              onClose={() => !rateBusy && setShowRate(false)}
+            />
           )}
         </div>
 
-        {/* description courte */}
-        {course.description && <p className="text-[15px] leading-relaxed opacity-90">{course.description}</p>}
-
-        {/* ======== DOCUMENTS ======== */}
-        {Array.isArray((course as any).documents) && (course as any).documents.length > 0 && (
-          <div className="mt-2">
-            <div className="text-sm font-semibold opacity-90 mb-2">
-              {t("player.documents", { defaultValue: "Documents" })}
-            </div>
-            <div className="flex gap-2 overflow-x-auto py-1 -mx-1 px-1">
-              {(course as any).documents.map((d: DocLite) => (
-                <button
-                  key={d.id}
-                  onClick={() => (ownedCurrent ? setOpenDoc(d) : buy())}
-                  className={`shrink-0 px-3 py-2 rounded-lg bg-white/10 ring-1 ring-white/10
-                              flex items-center gap-2 ${ownedCurrent ? "" : "opacity-60"}`}
-                >
-                  {/* icône PDF */}
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className="opacity-90">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1 7V3.5L19.5 9H15zM8.5 13h1v-1.5h1c.8 0 1.5-.7 1.5-1.5S11.3 8.5 10.5 8.5h-2v4.5zm1-3V9.5h1c.3 0 .5.2.5.5s-.2.5-.5.5h-1zM13 13h1v-1h1v-1h-1V9.5h1V8.5h-2V13zm3.5 0H18c.8 0 1.5-.7 1.5-1.5S18.8 10 18 10h-1V8.5h-1V13zm1-2c.3 0 .5.2.5.5s-.2.5-.5.5h-1v-1h1z" />
-                  </svg>
-                  <span className="text-sm max-w-[52vw] truncate">{d.title || t("player.documents", { defaultValue: "Document" })}</span>
-                  {!ownedCurrent && <span className="text-xs ml-1">🔒</span>}
-                </button>
-              ))}
-            </div>
-            <div className="text-xs opacity-60 mt-1">
-              {t("courseInfo.pdfHint", { defaultValue: "Livret PDF & ressources" })}
-            </div>
+        {/* --- ONGLET STICKY --- */}
+        <div
+          className="sticky z-30 bg-black border-t border-white/10"
+          style={{ top: "calc(100vw * 9 / 16)" }}
+          role="tablist"
+          aria-label={t("courseInfo.tabsLabel", { defaultValue: "Sections du cours" })}
+        >
+          <div className="flex gap-2 px-2">
+            <TabBtn
+              k="episodes"
+              label={t("courseInfo.tabs.episodes", { defaultValue: "Épisodes" })}
+            />
+            <TabBtn
+              k="similar"
+              label={t("courseInfo.tabs.similar", { defaultValue: "Titres similaires" })}
+            />
+            <TabBtn
+              k="trailers"
+              label={t("courseInfo.tabs.trailers", { defaultValue: "Bandes-annonces" })}
+            />
           </div>
-        )}
+          <div className="h-[1px] bg-white/10" />
+        </div>
 
-        {/* actions rapides */}
-        <QuickActions
-          rating={rating}
-          setShowRate={setShowRate}
-          inList={inList}
-          listBusy={listBusy}
-          toggleList={toggleList}
-          share={share}
+        {/* --- CONTENU ONGLET --- */}
+        <TabsContent
+          tab={tab}
+          course={course}
+          owned={ownedCurrent}
+          courseId={courseId}
+          similar={similar}
+          buy={buy}
+          nav={nav}
+          bg={bg}
+          teaser={teaser}
         />
 
-        {/* Popover Évaluer */}
-        {showRate && (
-          <RatePopover
-            busy={rateBusy}
-            rating={rating}
-            onPick={sendRating}
-            onClose={() => !rateBusy && setShowRate(false)}
+        {/* ======== BOTTOM-SHEET PDF ======== */}
+        {openDoc && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/60"
+              onClick={() => setOpenDoc(null)}
+            />
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 bg-[#0b0b0b] rounded-t-2xl ring-1 ring-white/10 overflow-hidden"
+              style={{ maxHeight: "85vh" }}
+            >
+              <div className="p-3 flex items-center justify-between">
+                <div className="h-1.5 w-10 rounded-full bg-white/20 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+                <div className="text-sm font-semibold pr-8">
+                  {openDoc.title ||
+                    t("player.documents", { defaultValue: "Document" })}
+                </div>
+                <button
+                  className="p-2 -mr-1 opacity-80"
+                  onClick={() => setOpenDoc(null)}
+                  aria-label={t("actions.close", { defaultValue: "Fermer" })}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bg-black/40">
+                <iframe
+                  title={
+                    openDoc.title ||
+                    t("player.documents", { defaultValue: "Document" })
+                  }
+                  src={`${openDoc.file}#view=FitH`}
+                  className="w-full"
+                  style={{ height: "60vh" }}
+                />
+              </div>
+
+              <div className="p-3 grid grid-cols-2 gap-2">
+                <a
+                  href={openDoc.file}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="h-11 rounded-md bg-white text-black font-semibold grid place-items-center"
+                  onClick={() =>
+                    client
+                      .post(`/learning/documents/${openDoc.id}/track/`)
+                      .catch(() => {})
+                  }
+                >
+                  {t("courseInfo.open", { defaultValue: "Ouvrir" })}
+                </a>
+                <a
+                  href={openDoc.file}
+                  download
+                  className="h-11 rounded-md bg白/10 text-white grid place-items-center ring-1 ring-white/10"
+                  onClick={() =>
+                    client
+                      .post(`/learning/documents/${openDoc.id}/track/`)
+                      .catch(() => {})
+                  }
+                >
+                  {t("courseInfo.download", { defaultValue: "Télécharger" })}
+                </a>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ======== BOTTOM-SHEET PARTAGE (fallback) ======== */}
+        {showShare && (
+          <ShareSheet
+            url={`${window.location.origin}/info/${courseId}`}
+            title={course.title}
+            text={course.synopsis || ""}
+            onClose={() => setShowShare(false)}
           />
         )}
+
+        <MobileTabbar />
       </div>
-
-      {/* --- ONGLET STICKY --- */}
-      <div
-        className="sticky z-30 bg-black border-t border-white/10"
-        style={{ top: "calc(100vw * 9 / 16)" }}
-        role="tablist"
-        aria-label={t("courseInfo.tabsLabel", { defaultValue: "Sections du cours" })}
-      >
-        <div className="flex gap-2 px-2">
-          <TabBtn k="episodes" label={t("courseInfo.tabs.episodes", { defaultValue: "Épisodes" })} />
-          <TabBtn k="similar" label={t("courseInfo.tabs.similar", { defaultValue: "Titres similaires" })} />
-          <TabBtn k="trailers" label={t("courseInfo.tabs.trailers", { defaultValue: "Bandes-annonces" })} />
-        </div>
-        <div className="h-[1px] bg-white/10" />
-      </div>
-
-      {/* --- CONTENU ONGLET --- */}
-      <TabsContent
-        tab={tab}
-        course={course}
-        owned={ownedCurrent}
-        courseId={courseId}
-        similar={similar}
-        buy={buy}
-        nav={nav}
-        bg={bg}
-        teaser={teaser}
-      />
-
-      {/* ======== BOTTOM-SHEET PDF ======== */}
-      {openDoc && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/60" onClick={() => setOpenDoc(null)} />
-          <div
-            className="fixed inset-x-0 bottom-0 z-50 bg-[#0b0b0b] rounded-t-2xl ring-1 ring-white/10 overflow-hidden"
-            style={{ maxHeight: "85vh" }}
-          >
-            <div className="p-3 flex items-center justify-between">
-              <div className="h-1.5 w-10 rounded-full bg-white/20 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
-              <div className="text-sm font-semibold pr-8">{openDoc.title || t("player.documents", { defaultValue: "Document" })}</div>
-              <button className="p-2 -mr-1 opacity-80" onClick={() => setOpenDoc(null)} aria-label={t("actions.close", { defaultValue: "Fermer" })}>✕</button>
-            </div>
-
-            <div className="bg-black/40">
-              <iframe
-                title={openDoc.title || t("player.documents", { defaultValue: "Document" })}
-                src={`${openDoc.file}#view=FitH`}
-                className="w-full"
-                style={{ height: "60vh" }}
-              />
-            </div>
-
-            <div className="p-3 grid grid-cols-2 gap-2">
-              <a
-                href={openDoc.file}
-                target="_blank"
-                rel="noreferrer"
-                className="h-11 rounded-md bg-white text-black font-semibold grid place-items-center"
-                onClick={() => client.post(`/learning/documents/${openDoc.id}/track/`).catch(() => {})}
-              >
-                {t("courseInfo.open", { defaultValue: "Ouvrir" })}
-              </a>
-              <a
-                href={openDoc.file}
-                download
-                className="h-11 rounded-md bg-white/10 text-white grid place-items-center ring-1 ring-white/10"
-                onClick={() => client.post(`/learning/documents/${openDoc.id}/track/`).catch(() => {})}
-              >
-                {t("courseInfo.download", { defaultValue: "Télécharger" })}
-              </a>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ======== BOTTOM-SHEET PARTAGE (fallback) ======== */}
-      {showShare && (
-        <ShareSheet
-          url={`${window.location.origin}/info/${courseId}`}
-          title={course.title}
-          text={course.synopsis || ""}
-          onClose={() => setShowShare(false)}
-        />
-      )}
-
-      <MobileTabbar />
-    </div>
+    </>
   );
 }
 
@@ -716,28 +858,32 @@ function QuickActions({
   const color =
     rating === 0 ? "" : rating === -1 ? "text-red-400" : rating === 1 ? "text-green-400" : "text-yellow-300";
 
-  // Icônes locales
-  const IconThumbDown = (p: any) => (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...p}>
-      <path d="M2 10h4v10H2zM22 11c0-1.1-.9-2-2-2h-6l1-4c.1-.3 0-.6-.2-.9-.3-.5-.8-.8-1.4-.8H13c-.5 0-1-.2-1.3-.6L7 8v10h10c.7 0 1.3-.4 1.7-1l3-5c.2-.3.3-.7.3-1z"/>
+  const IconThumbDown = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...props}>
+      <path d="M2 10h4v10H2zM22 11c0-1.1-.9-2-2-2h-6l1-4c.1-.3 0-.6-.2-.9-.3-.5-.8-.8-1.4-.8H13c-.5 0-1-.2-1.3-.6L7 8v10h10c.7 0 1.3-.4 1.7-1l3-5c.2-.3.3-.7.3-1z" />
     </svg>
   );
-  const IconThumbUp = (p: any) => (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...p}>
-      <path d="M2 14h4V4H2zM22 13c0 1.1-.9 2-2 2h-6l1 4c.1.3 0 .6-.2.9-.3.5-.8.8-1.4.8H13c-.5 0-1-.2-1.3-.6L7 16V6h10c.7 0 1.3.4 1.7 1l3 5c.2.3.3.7.3 1z"/>
+  const IconThumbUp = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...props}>
+      <path d="M2 14h4V4H2zM22 13c0 1.1-.9 2-2 2h-6l1 4c.1.3 0 .6-.2.9-.3.5-.8.8-1.4.8H13c-.5 0-1-.2-1.3-.6L7 16V6h10c.7 0 1.3.4 1.7 1l3 5c.2.3.3.7.3 1z" />
     </svg>
   );
-  const IconTwoThumbs = (p: any) => (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...p}>
-      <path d="M1 14h4V4H1v10zm6-8v10l4 4 2-8h6l-3-5c-.4-.6-1-.9-1.7-.9H9zm12 4v10h4V10h-4zM7 10h4l1-4-5 4z"/>
+  const IconTwoThumbs = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" {...props}>
+      <path d="M1 14h4V4H1v10zm6-8v10l4 4 2-8h6l-3-5c-.4-.6-1-.9-1.7-.9H9zm12 4v10h4V10h-4zM7 10h4l1-4-5 4z" />
     </svg>
   );
 
   const EvalIcon = () =>
-    rating === 0 ? <span className="inline-block scale-110">👍</span>
-    : rating === -1 ? <IconThumbDown className="scale-110" />
-    : rating === 1 ?  <IconThumbUp className="scale-110" />
-    : <IconTwoThumbs className="scale-110" />;
+    rating === 0 ? (
+      <span className="inline-block scale-110">👍</span>
+    ) : rating === -1 ? (
+      <IconThumbDown className="scale-110" />
+    ) : rating === 1 ? (
+      <IconThumbUp className="scale-110" />
+    ) : (
+      <IconTwoThumbs className="scale-110" />
+    );
 
   return (
     <div className="grid grid-cols-3 gap-4 text-center text-sm py-2">
@@ -751,7 +897,7 @@ function QuickActions({
         <div className="mt-1 opacity-80">
           {inList
             ? t("course.removeFromList", { defaultValue: "Retirer de ma liste" })
-            : t("course.addToList", { defaultValue: "Ajouter à ma liste" })}
+            : t("course.addFromList", { defaultValue: "Ajouter à ma liste" })}
         </div>
       </button>
 
@@ -764,7 +910,9 @@ function QuickActions({
       {/* Partager */}
       <button onClick={share} className="opacity-90">
         ✈︎
-        <div className="mt-1 opacity-80">{t("courseInfo.quick.share", { defaultValue: "Partager" })}</div>
+        <div className="mt-1 opacity-80">
+          {t("courseInfo.quick.share", { defaultValue: "Partager" })}
+        </div>
       </button>
     </div>
   );
@@ -783,20 +931,19 @@ function RatePopover({
 }) {
   const { t } = useTranslation("common");
 
-  // Icônes locales
-  const IconThumbDown = (p: any) => (
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...p}>
-      <path d="M2 10h4v10H2zM22 11c0-1.1-.9-2-2-2h-6l1-4c.1-.3 0-.6-.2-.9-.3-.5-.8-.8-1.4-.8H13c-.5 0-1-.2-1.3-.6L7 8v10h10c.7 0 1.3-.4 1.7-1l3-5c.2-.3.3-.7.3-1z"/>
+  const IconThumbDown = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...props}>
+      <path d="M2 10h4v10H2zM22 11c0-1.1-.9-2-2-2h-6l1-4c.1-.3 0-.6-.2-.9-.3-.5-.8-.8-1.4-.8H13c-.5 0-1-.2-1.3-.6L7 8v10h10c.7 0 1.3-.4 1.7-1l3-5c.2-.3.3-.7.3-1z" />
     </svg>
   );
-  const IconThumbUp = (p: any) => (
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...p}>
-      <path d="M2 14h4V4H2zM22 13c0 1.1-.9 2-2 2h-6l1 4c.1.3 0 .6-.2.9-.3.5-.8.8-1.4.8H13c-.5 0-1-.2-1.3-.6L7 16V6h10c.7 0 1.3.4 1.7 1l3 5c.2.3.3.7.3 1z"/>
+  const IconThumbUp = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...props}>
+      <path d="M2 14h4V4H2zM22 13c0 1.1-.9 2-2 2h-6l1 4c.1.3 0 .6-.2.9-.3.5-.8.8-1.4.8H13c-.5 0-1-.2-1.3-.6L7 16V6h10c.7 0 1.3.4 1.7 1l3 5c.2.3.3.7.3 1z" />
     </svg>
   );
-  const IconTwoThumbs = (p: any) => (
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...p}>
-      <path d="M1 14h4V4H1v10zm6-8v10l4 4 2-8h6l-3-5c-.4-.6-1-.9-1.7-.9H9zm12 4v10h4V10h-4zM7 10h4l1-4-5 4z"/>
+  const IconTwoThumbs = (props: React.ComponentProps<"svg">) => (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" {...props}>
+      <path d="M1 14h4V4H1v10zm6-8v10l4 4 2-8h6l-3-5c-.4-.6-1-.9-1.7-.9H9zm12 4v10h4V10h-4zM7 10h4l1-4-5 4z" />
     </svg>
   );
 
@@ -827,10 +974,16 @@ function RatePopover({
         : "hover:shadow-[0_0_24px_rgba(253,224,71,.35)]";
     const tint =
       color === "red"
-        ? active ? "text-red-400 bg-white/10" : "text-red-300/80"
+        ? active
+          ? "text-red-400 bg-white/10"
+          : "text-red-300/80"
         : color === "green"
-        ? active ? "text-green-400 bg-white/10" : "text-green-300/80"
-        : active ? "text-yellow-300 bg-white/10" : "text-yellow-200/80";
+        ? active
+          ? "text-green-400 bg-white/10"
+          : "text-green-300/80"
+        : active
+        ? "text-yellow-300 bg-white/10"
+        : "text-yellow-200/80";
 
     return (
       <button
@@ -925,10 +1078,13 @@ function TabsContent({
           {course.lessons?.length ? (
             <div className="space-y-2">
               {course.lessons.map((l) => {
-                const fmt2 = (n: number) => String(n ?? 0).padStart(2, "0");        // 01, 02, 10…
+                const fmt2 = (n: number) => String(n ?? 0).padStart(2, "0"); // 01, 02, 10…
                 const mins = l.duration_seconds ? Math.round(l.duration_seconds / 60) : 0;
                 return (
-                  <div key={l.id} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                  <div
+                    key={l.id}
+                    className="flex items-center gap-3 bg-white/5 rounded-lg p-3"
+                  >
                     {/* vignette */}
                     <div className="w-[112px] aspect-video bg-black/30 rounded overflow-hidden shrink-0" />
 
@@ -957,14 +1113,20 @@ function TabsContent({
                       onClick={() => (owned ? nav(`/player/${courseId}?l=${l.id}`) : buy())}
                       className="text-sm px-3 py-1 rounded bg-white text-black shrink-0 w-24 text-center"
                     >
-                      {owned ? t("card.play", { defaultValue: "Lecture" }) : t("course.buyNow", { defaultValue: "Acheter" })}
+                      {owned
+                        ? t("card.play", { defaultValue: "Lecture" })
+                        : t("course.buyNow", { defaultValue: "Acheter" })}
                     </button>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="opacity-80">{t("courseInfo.empty.episodes", { defaultValue: "Aucun épisode disponible." })}</p>
+            <p className="opacity-80">
+              {t("courseInfo.empty.episodes", {
+                defaultValue: "Aucun épisode disponible.",
+              })}
+            </p>
           )}
         </>
       )}
@@ -979,17 +1141,27 @@ function TabsContent({
                   className="text-left rounded-lg overflow-hidden bg-white/5 ring-1 ring-white/10"
                   onClick={() => nav(`/info/${c.id}`)}
                 >
-                  <img src={(c as any).thumbnail} alt={c.title} className="w-full aspect-video object-cover" />
+                  <img
+                    src={(c as any).thumbnail}
+                    alt={c.title}
+                    className="w-full aspect-video object-cover"
+                  />
                   <div className="p-2">
-                    <div className="text-sm font-medium line-clamp-1">{c.title}</div>
-                    <div className="text-xs opacity-80 mt-1">{(c.price_cents / 100).toFixed(2)} €</div>
+                    <div className="text-sm font-medium line-clamp-1">
+                      {c.title}
+                    </div>
+                    <div className="text-xs opacity-80 mt-1">
+                      {(c.price_cents / 100).toFixed(2)} €
+                    </div>
                   </div>
                 </button>
               ))}
             </div>
           ) : (
             <p className="opacity-80">
-              {t("courseInfo.empty.similar", { defaultValue: "Aucune recommandation pour le moment." })}
+              {t("courseInfo.empty.similar", {
+                defaultValue: "Aucune recommandation pour le moment.",
+              })}
             </p>
           )}
         </>
@@ -1005,15 +1177,14 @@ function TabsContent({
                 playsInline
                 className="w-full"
                 poster={bg}
-                // on laisse le src vide ici, on l'attachera à l'ouverture (similaire à TeaserLayer)
-                // pour rester simple, on met directement le src pour Safari, et Chrome lira en progressive si MP4 ;
-                // si c'est du HLS sur Chrome, l'utilisateur lira en player natif si extension/support sinon
                 src={teaser}
               />
             </div>
           ) : (
             <p className="opacity-80">
-              {t("courseInfo.empty.trailers", { defaultValue: "Pas de bande-annonce disponible." })}
+              {t("courseInfo.empty.trailers", {
+                defaultValue: "Pas de bande-annonce disponible.",
+              })}
             </p>
           )}
         </>
@@ -1041,8 +1212,13 @@ function ShareSheet({
   // Copy robuste (HTTPS → Clipboard API ; sinon → execCommand)
   const copyRobust = async (value: string) => {
     let ok = false;
-    if (navigator.clipboard && (window as any).isSecureContext) {
-      try { await navigator.clipboard.writeText(value); ok = true; } catch {}
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(value);
+        ok = true;
+      } catch {
+        ok = false;
+      }
     }
     if (!ok) {
       try {
@@ -1073,8 +1249,12 @@ function ShareSheet({
 
   const doShare = async () => {
     try {
-      // @ts-ignore
-      if (canShare) await navigator.share({ title, text, url });
+      if (canShare) {
+        const navWithShare = navigator as ShareNavigator;
+        if (navWithShare.share) {
+          await navWithShare.share({ title, text, url });
+        }
+      }
       onClose();
     } catch {
       // annulé → reste ouvert
@@ -1100,7 +1280,7 @@ function ShareSheet({
             className="w-full text-xs bg-white/5 rounded-lg px-3 py-2 text-center break-all opacity-90"
           />
 
-          <div className="mt-3 grid grid-cols-1 gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2">
             <button
               onClick={doShare}
               disabled={!canShare}
@@ -1110,6 +1290,7 @@ function ShareSheet({
             >
               {t("share.shareVia", { defaultValue: "📤 Partager via…" })}
             </button>
+
             <button
               onClick={copy}
               className="h-11 rounded-md grid place-items-center ring-1 ring-white/20 bg-white/10"
@@ -1118,6 +1299,7 @@ function ShareSheet({
                 ? t("share.linkCopied", { defaultValue: "✅ Lien copié" })
                 : t("share.copyLink", { defaultValue: "🔗 Copier le lien" })}
             </button>
+
             <button
               onClick={onClose}
               className="h-11 rounded-md grid place-items-center bg-white/0 text-white/80"
